@@ -1,0 +1,33 @@
+---
+/**
+ * Admin Product Detail — /admin/products/:id
+ *
+ * Product detail with plans, domains, and access matrix.
+ * Mounts ProductDetailAdmin Vue component.
+ *
+ * The Vue component reads the product ID from the URL path directly,
+ * which is more reliable with Astro ClientRouter (View Transitions)
+ * than passing it as a prop via client:only.  The prop is kept as a
+ * secondary fallback for direct full-page loads.
+ */
+import AdminLayout from "@/layouts/AdminLayout.astro";
+import ProductDetailAdmin from "@/components/admin/ProductDetailAdmin.vue";
+
+const { id } = Astro.params;
+const productId = Number(id);
+
+if (!productId || isNaN(productId)) {
+  return Astro.redirect("/admin/products");
+}
+---
+
+<AdminLayout
+  title="Product Detail — Admin — SattaBase"
+  description="Product detail, plans, domains, and access matrix."
+>
+  <ProductDetailAdmin client:only="vue" :productId={productId} />
+</AdminLayout>
+
+<script>
+  import { useAdminGuard } from "@/composables/useAdminGuard";
+</script>

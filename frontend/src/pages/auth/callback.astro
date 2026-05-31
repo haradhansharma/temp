@@ -1,0 +1,39 @@
+---
+/**
+ * SSO Callback Page — Cross-Domain Authorization Code Exchange
+ *
+ * This page handles the second half of the cross-domain SSO flow.
+ * When a sister domain (e.g., finance.sattaspace.com) needs to redirect
+ * an authenticated user to the Sattabase base domain, it:
+ *
+ *   1. Calls POST /auth/authorize (with its JWT) → gets a one-time code
+ *   2. Redirects to: sattabase.tld/auth/callback?code=XXX&return_to=/dashboard/billing
+ *
+ * This callback page then:
+ *   3. Exchanges the code for JWT tokens via POST /auth/token/exchange
+ *   4. Stores the tokens in the base domain's localStorage/sessionStorage
+ *   5. Redirects to the return_to path (defaults to /dashboard)
+ *
+ * The authorization code:
+ *   - Expires in 30 seconds
+ *   - Can only be used once (consumed on exchange)
+ *   - Is validated server-side against Redis
+ *
+ * If the code is invalid, expired, or already used, the user is
+ * redirected to the login page with an error message.
+ */
+
+import BaseLayout from "@layouts/BaseLayout.astro";
+import AuthCallbackHandler from "@components/vue/AuthCallbackHandler.vue";
+---
+
+<BaseLayout
+  title="Authenticating..."
+  description="Completing cross-domain sign-in"
+>
+  <div
+    class="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900"
+  >
+    <AuthCallbackHandler client:only="vue" />
+  </div>
+</BaseLayout>

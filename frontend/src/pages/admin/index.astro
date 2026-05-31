@@ -1,0 +1,25 @@
+---
+/**
+ * Admin Dashboard — Landing page for /admin route.
+ *
+ * Mounts the AdminDashboard Vue component which displays:
+ *   - Stats row (Active Subscriptions, MRR, Trials, Past Due, Churn Rate)
+ *   - Revenue trend chart (last 12 months)
+ *   - Revenue by product bar chart
+ *   - Recent activity feed (last 10 audit log entries)
+ *   - Quick links to admin sections
+ */
+import AdminLayout from "@/layouts/AdminLayout.astro";
+import AdminDashboard from "@/components/admin/AdminDashboard.vue";
+---
+
+<AdminLayout
+  title="Admin Dashboard — SattaBase"
+  description="SattaBase administration dashboard."
+>
+  <AdminDashboard client:only="vue" />
+</AdminLayout>
+
+<script>
+  import { useAdminGuard } from "@/composables/useAdminGuard";
+</script>

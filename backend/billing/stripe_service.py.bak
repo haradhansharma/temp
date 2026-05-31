@@ -1,0 +1,1993 @@
+"""Stripe service — handles all Stripe API interactions.
+
+This module encapsulates the Stripe Python SDK calls for checkout,
+customer management, portal sessions, and webhook event processing.
+All methods are synchronous (Stripe SDK is sync) and should be called
+via ``sync_to_async`` from async controller endpoints.
+
+Configuration is read from Django settings:
+
+- ``STRIPE_SECRET_KEY`` — required for API calls
+- ``STRIPE_WEBHOOK_SECRET`` — required for webhook signature verification
+- ``STRIPE_SUCCESS_URL`` — redirect after successful checkout
+- ``STRIPE_CANCEL_URL`` — redirect when user cancels checkout
+- ``STRIPE_PORTAL_RETURN_URL`` — redirect after portal session
+"""
+
+import json
+import logging
+import signal
+from typing import Optional
+from contextlib import contextmanager
+import time
+
+import stripe
+from django.conf import settings
+from django.utils import timezone
+from django.db import transaction
+
+from .models import (
+    Product,
+    Plan,
+    BillingCycle,
+    Subscription,
+    SubscriptionStatus,
+    WebhookEventLog,
+)
+
+logger = logging.getLogger(__name__)
+
+# Webhook processing timeout (seconds) — prevents hung Stripe API calls
+# from blocking the webhook endpoint indefinitely.
+WEBHOOK_PROCESSING_TIMEOUT = 25
+
+
+def _safe_get(stripe_obj, key, default=None):
+    """Safely access a key from a Stripe API response object.
+
+    Newer Stripe SDK versions (7+) return ``StripeObject`` instances
+    that do NOT have a ``.get()`` method.  This helper works with both
+    old (dict-like) and new (attribute-only) Stripe objects by trying
+    bracket access first, then attribute access, then returning default.
+    """
+    try:
+        return stripe_obj[key]
+    except (KeyError, TypeError, IndexError):
+        pass
+    try:
+        return getattr(stripe_obj, key, default)
+    except Exception:
+        return default
+
+
+def _get_subscription_items(stripe_sub) -> list:
+    """Extract subscription items list from a Stripe Subscription object.
+
+    Compatible with both old dict-like and new attribute-based Stripe SDK.
+    """
+    items_container = _safe_get(stripe_sub, "items", {})
+    if items_container is None:
+        items_container = {}
+    return _safe_get(items_container, "data", []) or []
+
+
+# =============================================================================
+# Stripe Client Initialization
+# =============================================================================
+
+
+def _get_stripe_api_key() -> str:
+    """Return the Stripe API key or raise if not configured."""
+    key = settings.STRIPE_SECRET_KEY
+    if not key:
+        raise ValueError(
+            "Stripe is not configured. Set SF_STRIPE_SECRET_KEY in your .env file."
+        )
+    return key
+
+
+# =============================================================================
+# Stripe Product & Price Auto-Creation
+# =============================================================================
+
+
+def get_or_create_stripe_price_for_currency(
+    plan: Plan,
+    target_currency: str,
+) -> str:
+    """Get or create a Stripe Price in the user's preferred currency.
+
+    Stripe requires a separate ``Price`` object per currency.  When a
+    user whose preferred currency differs from the plan's base currency
+    initiates checkout, we need a Price object denominated in *their*
+    currency.  This function:
+
+    1. Ensures the Stripe Product exists (same product, multiple prices).
+    2. Lists existing Stripe Prices for the product in the target currency
+       with the same recurring interval.
+    3. If found, returns that price_id (reuse — avoids duplicates).
+    4. If not found, converts the plan's ``price_cents`` using exchange
+       rates and creates a new Stripe Price in the target currency.
+       The created price_id is stored in Stripe metadata for future
+       lookups.
+
+    Args:
+        plan: The Plan model instance.
+        target_currency: ISO 4217 code, e.g. ``"BDT"``.
+
+    Returns:
+        The ``stripe_price_id`` for a Price in the target currency.
+
+    Raises:
+        ValueError: If the exchange rate is not available for the conversion.
+    """
+    from .currency_service import convert_price, get_exchange_rate
+
+    target_currency = target_currency.upper()
+    plan_currency = plan.currency.upper()
+
+    # Same currency — use the existing base price
+    if target_currency == plan_currency:
+        return ensure_stripe_product_and_price(plan)
+
+    api_key = _get_stripe_api_key()
+    product = plan.product
+
+    # Ensure the Stripe Product exists first
+    ensure_stripe_product_and_price(plan)  # creates product if missing
+
+    # --- Search for an existing Price in the target currency --------------------
+    interval_map = {
+        BillingCycle.MONTHLY: "month",
+        BillingCycle.YEARLY: "year",
+        BillingCycle.LIFETIME: None,
+    }
+    target_interval = interval_map.get(plan.billing_cycle)
+
+    existing_prices = stripe.Price.list(
+        api_key=api_key,
+        product=product.stripe_product_id,
+        currency=target_currency.lower(),
+        active=True,
+        limit=100,
+    )
+
+    for sp in existing_prices.auto_paging_iter():
+        sp_recurring = _safe_get(sp, "recurring")
+        sp_interval = _safe_get(sp_recurring, "interval") if sp_recurring else None
+        if sp_interval == target_interval:
+            logger.info(
+                f"Reusing existing Stripe price {sp.id} "
+                f"({target_currency}) for plan '{plan.slug}'"
+            )
+            return sp.id
+
+    # --- No existing price — convert amount and create one ---------------------
+    converted_cents, rate = convert_price(
+        plan.price_cents, plan_currency, target_currency
+    )
+    if converted_cents is None or converted_cents <= 0:
+        raise ValueError(
+            f"Cannot create checkout in {target_currency}: "
+            f"no exchange rate available for {plan_currency} → {target_currency}. "
+            f"Please seed exchange rates first."
+        )
+
+    price_params = {
+        "api_key": api_key,
+        "product": product.stripe_product_id,
+        "unit_amount": converted_cents,
+        "currency": target_currency.lower(),
+        "metadata": {
+            "plan_slug": plan.slug,
+            "product_slug": product.slug,
+            "converted_from": plan_currency,
+            "exchange_rate": str(rate) if rate else "",
+        },
+    }
+
+    if target_interval is not None:
+        price_params["recurring"] = {"interval": target_interval}
+
+    if getattr(plan, "tax_inclusive", False):
+        price_params["tax_behavior"] = "inclusive"
+    else:
+        price_params["tax_behavior"] = "exclusive"
+
+    new_price = stripe.Price.create(**price_params)
+
+    logger.info(
+        f"Created Stripe price {new_price.id} for plan '{plan.slug}' "
+        f"in {target_currency} ({plan.price_cents} {plan_currency} → "
+        f"{converted_cents} {target_currency}, rate={rate})"
+    )
+    return new_price.id
+
+
+def ensure_stripe_product_and_price(plan: Plan) -> str:
+    """Get or create the Stripe Product and Price for this plan.
+
+    Auto-creates the Stripe Product (if the ``Product.stripe_product_id``
+    is blank) and the Stripe Price (if ``Plan.stripe_price_id`` is blank).
+    Both IDs are persisted to the database so subsequent checkouts
+    reuse the same Stripe objects.
+
+    This eliminates the need to manually create Products and Prices in
+    the Stripe Dashboard and copy IDs into Django admin.
+
+    Returns:
+        The ``stripe_price_id`` string (``price_...``).
+
+    Raises:
+        stripe.StripeError: If any Stripe API call fails.
+    """
+    if plan.stripe_price_id:
+        return plan.stripe_price_id
+
+    api_key = _get_stripe_api_key()
+    product = plan.product
+
+    # --- Ensure Stripe Product exists -----------------------------------------
+    if not product.stripe_product_id:
+        stripe_product = stripe.Product.create(
+            api_key=api_key,
+            name=product.name,
+            description=product.description or f"{product.name} subscription",
+            metadata={"product_slug": product.slug},
+        )
+        product.stripe_product_id = stripe_product.id
+        product.save(update_fields=["stripe_product_id"])
+        logger.info(
+            f"Created Stripe product {stripe_product.id} for "
+            f"product '{product.slug}'"
+        )
+
+    # --- Create Stripe Price ---------------------------------------------------
+    interval_map = {
+        BillingCycle.MONTHLY: "month",
+        BillingCycle.YEARLY: "year",
+        BillingCycle.LIFETIME: None,  # one-time payment
+    }
+
+    interval = interval_map.get(plan.billing_cycle)
+    is_recurring = interval is not None
+
+    price_params = {
+        "api_key": api_key,
+        "product": product.stripe_product_id,
+        "unit_amount": plan.price_cents,
+        "currency": plan.currency.lower(),
+        "metadata": {
+            "plan_slug": plan.slug,
+            "product_slug": product.slug,
+        },
+    }
+
+    if is_recurring:
+        price_params["recurring"] = {"interval": interval}
+
+    # Set tax_behavior on the Price object (not on checkout line_items)
+    if getattr(plan, "tax_inclusive", False):
+        price_params["tax_behavior"] = "inclusive"
+    else:
+        price_params["tax_behavior"] = "exclusive"
+
+    stripe_price = stripe.Price.create(**price_params)
+
+    plan.stripe_price_id = stripe_price.id
+    plan.save(update_fields=["stripe_price_id"])
+    logger.info(
+        f"Created Stripe price {stripe_price.id} for plan '{plan.slug}' "
+        f"(product '{product.slug}', {plan.price_cents/100:.2f} {plan.currency})"
+    )
+
+    return plan.stripe_price_id
+
+
+# =============================================================================
+# Stripe Subscription Sync (for local plan changes)
+# =============================================================================
+
+
+def update_stripe_subscription_plan(
+    subscription: Subscription,
+    new_plan: Plan,
+    proration_behavior: str = "create_prorations",
+) -> None:
+    """Update the Stripe subscription's plan item to match a local plan change.
+
+    Called when a user switches between paid plans via the local
+    ``change-plan`` endpoint.  Modifies the Stripe subscription item
+    to use the new plan's price (creating the price first if needed).
+
+    The new price is created in the EXISTING subscription's currency
+    to avoid Stripe's "cannot combine currencies" error.
+
+    Raises:
+        ValueError: If the subscription has no ``stripe_subscription_id``.
+        stripe.StripeError: If the Stripe API call fails.
+    """
+    if not subscription.stripe_subscription_id:
+        return  # Nothing to sync — no Stripe subscription yet
+
+    api_key = _get_stripe_api_key()
+
+    stripe_sub = stripe.Subscription.retrieve(
+        subscription.stripe_subscription_id, api_key=api_key
+    )
+    items = _get_subscription_items(stripe_sub)
+
+    if not items:
+        logger.warning(
+            f"Stripe subscription {subscription.stripe_subscription_id} "
+            f"has no items — cannot update plan"
+        )
+        return
+
+    # Use the EXISTING subscription's currency for the new price.
+    # Stripe does not allow mixing currencies on a subscription.
+    existing_currency = _safe_get(stripe_sub, "currency", "usd") or "usd"
+    price_id = get_or_create_stripe_price_for_currency(new_plan, existing_currency)
+
+    stripe.Subscription.modify(
+        subscription.stripe_subscription_id,
+        api_key=api_key,
+        items=[{"id": items[0].id, "price": price_id}],
+        metadata={
+            "plan_slug": new_plan.slug,
+            "product_slug": new_plan.product.slug,
+        },
+        proration_behavior=proration_behavior,
+    )
+
+    logger.info(
+        f"Updated Stripe subscription {subscription.stripe_subscription_id} "
+        f"plan → {new_plan.slug} (price {price_id}, currency={existing_currency})"
+    )
+
+
+def cancel_stripe_subscription(subscription: Subscription) -> None:
+    """Cancel the Stripe subscription at the end of the billing period.
+
+    Called when a paid subscriber downgrades to the free plan via the
+    local ``cancel`` endpoint.  Sets ``cancel_at_period_end=True`` on
+    the Stripe side so access continues until the period ends.
+
+    Raises:
+        stripe.StripeError: If the Stripe API call fails.
+    """
+    if not subscription.stripe_subscription_id:
+        return  # Nothing to cancel — no Stripe subscription
+
+    api_key = _get_stripe_api_key()
+
+    stripe.Subscription.modify(
+        subscription.stripe_subscription_id,
+        api_key=api_key,
+        cancel_at_period_end=True,
+    )
+
+    logger.info(
+        f"Canceled Stripe subscription {subscription.stripe_subscription_id} "
+        f"at period end (user downgraded to free plan)"
+    )
+
+
+def reactivate_stripe_subscription(
+    subscription: Subscription,
+    new_plan: Plan,
+) -> None:
+    """Reactivate a cancelled Stripe subscription with a new plan.
+
+    When a user previously had a paid subscription that was cancelled at
+    period end, and now wants to re-subscribe to a (possibly different)
+    paid plan, we reuse the existing Stripe subscription instead of
+    creating a new checkout session.  This avoids the "cannot combine
+    currencies" error that occurs when creating a new checkout in a
+    different currency than the customer's existing subscription.
+
+    Steps:
+    1. Fetch the live Stripe subscription to get its currency.
+    2. Remove the ``cancel_at_period_end`` flag on the Stripe side.
+    3. Create/reuse a Stripe Price for the new plan in the EXISTING
+       subscription's currency (must match — Stripe forbids mixing).
+    4. Swap the plan's price on the subscription item.
+    5. The subscription resumes with proration.
+
+    Args:
+        subscription: The local Subscription with a ``stripe_subscription_id``.
+        new_plan: The Plan the user wants to switch to.
+
+    Raises:
+        ValueError: If subscription has no Stripe ID or the sub has no items.
+        stripe.StripeError: If the Stripe API call fails.
+    """
+    if not subscription.stripe_subscription_id:
+        raise ValueError("No Stripe subscription to reactivate.")
+
+    api_key = _get_stripe_api_key()
+
+    # Fetch current Stripe subscription
+    stripe_sub = stripe.Subscription.retrieve(
+        subscription.stripe_subscription_id, api_key=api_key
+    )
+    items = _get_subscription_items(stripe_sub)
+
+    if not items:
+        raise ValueError("Stripe subscription has no items — cannot reactivate.")
+
+    # Get the currency of the EXISTING Stripe subscription.
+    # We must create the new price in this exact currency — Stripe
+    # does not allow changing currencies on an existing subscription.
+    existing_currency = _safe_get(stripe_sub, "currency", "usd") or "usd"
+
+    # Create or reuse a Stripe Price for the new plan in the existing
+    # subscription's currency (not the plan's base currency, not the
+    # user's current preference — the sub's currency is what matters).
+    price_id = get_or_create_stripe_price_for_currency(new_plan, existing_currency)
+
+    stripe.Subscription.modify(
+        subscription.stripe_subscription_id,
+        api_key=api_key,
+        cancel_at_period_end=False,
+        items=[{"id": items[0].id, "price": price_id}],
+        metadata={
+            "plan_slug": new_plan.slug,
+            "product_slug": new_plan.product.slug,
+            "user_id": str(subscription.user.id),
+        },
+        proration_behavior="create_prorations",
+    )
+
+    logger.info(
+        f"Reactivated Stripe subscription {subscription.stripe_subscription_id} "
+        f"with plan → {new_plan.slug} (price {price_id}, currency={existing_currency})"
+    )
+
+
+# =============================================================================
+# Customer Management
+# =============================================================================
+
+
+def create_or_get_customer(user) -> str:
+    """Create a Stripe Customer for the user, or return existing one.
+
+    Looks up any subscription the user has with a ``stripe_customer_id``
+    set. If found, retrieves the customer from Stripe. Otherwise creates
+    a new Stripe Customer record.
+
+    Returns:
+        The Stripe customer ID string (``cus_...``).
+
+    Raises:
+        stripe.StripeError: If the Stripe API call fails.
+    """
+    api_key = _get_stripe_api_key()
+
+    # Check existing subscriptions for a customer ID
+    existing_sub = (
+        Subscription.objects.filter(user=user)
+        .exclude(stripe_customer_id="")
+        .exclude(stripe_customer_id__isnull=True)
+        .first()
+    )
+
+    if existing_sub and existing_sub.stripe_customer_id:
+        # Verify the customer still exists in Stripe
+        try:
+            stripe.Customer.retrieve(
+                existing_sub.stripe_customer_id,
+                api_key=api_key,
+            )
+            return existing_sub.stripe_customer_id
+        except stripe.InvalidRequestError:
+            # Customer was deleted in Stripe — fall through to create new
+            pass
+
+    # Create new Stripe Customer
+    customer = stripe.Customer.create(
+        api_key=api_key,
+        email=user.email,
+        name=user.get_full_name() or user.email,
+        metadata={
+            "user_id": user.id,
+            "user_email": user.email,
+        },
+    )
+
+    logger.info(f"Created Stripe customer {customer.id} for user {user.email}")
+    return customer.id
+
+
+def sync_stripe_customer_data(user) -> dict:
+    """Sync Stripe Customer data to the local user profile.
+
+    Pulls the latest customer record from Stripe and updates the local
+    user's email, name, and currency to match. This ensures consistency
+    when users update their profile via Stripe Customer Portal.
+
+    F8: Critical for data integrity — Stripe Portal changes must
+    propagate to the local database.
+
+    Args:
+        user: The Django user to sync.
+
+    Returns:
+        Dict with updated fields: {email, name, currency, synced}.
+    """
+    api_key = _get_stripe_api_key()
+
+    # Find the user's Stripe customer ID
+    sub = (
+        Subscription.objects.filter(user=user)
+        .exclude(stripe_customer_id="")
+        .exclude(stripe_customer_id__isnull=True)
+        .first()
+    )
+    if not sub or not sub.stripe_customer_id:
+        return {"synced": False, "error": "No Stripe customer found for user"}
+
+    try:
+        customer = stripe.Customer.retrieve(sub.stripe_customer_id, api_key=api_key)
+        updated = False
+
+        # Sync email
+        stripe_email = _safe_get(customer, "email")
+        if stripe_email and stripe_email != user.email:
+            user.email = stripe_email
+            updated = True
+
+        # Sync name
+        stripe_name = _safe_get(customer, "name")
+        if stripe_name:
+            parts = stripe_name.strip().split(" ", 1)
+            if parts[0] and parts[0] != user.first_name:
+                user.first_name = parts[0]
+                updated = True
+            if len(parts) > 1 and parts[1] != user.last_name:
+                user.last_name = parts[1]
+                updated = True
+
+        # Sync currency from Stripe metadata
+        metadata = _safe_get(customer, "metadata") or {}
+        stripe_currency = _safe_get(metadata, "preferred_currency")
+        if stripe_currency and hasattr(user, "currency"):
+            valid_currencies = [
+                c[0]
+                for c in getattr(
+                    user.__class__, "CurrencyChoices", type("C", (), {"choices": ()})
+                )
+            ]
+            if stripe_currency in valid_currencies and stripe_currency != user.currency:
+                user.currency = stripe_currency
+                updated = True
+
+        if updated:
+            user.save()
+            logger.info(f"Synced customer data from Stripe for user {user.id}")
+        else:
+            logger.info(
+                f"No changes needed — customer data already in sync for user {user.id}"
+            )
+
+        return {
+            "synced": True,
+            "email": stripe_email,
+            "name": stripe_name,
+            "currency": stripe_currency,
+        }
+
+    except stripe.InvalidRequestError as e:
+        logger.error(f"Failed to sync Stripe customer data for user {user.id}: {e}")
+        return {"synced": False, "error": str(e)}
+
+
+# =============================================================================
+# Checkout Session
+# =============================================================================
+
+
+def create_checkout_session(
+    user,
+    plan: Plan,
+    product: Product,
+    billing_cycle: Optional[str] = None,
+    user_currency: Optional[str] = None,
+) -> str:
+    """Create a Stripe Checkout session for the given plan.
+
+    Args:
+        user: The Django user initiating checkout.
+        plan: The Plan to subscribe to (auto-creates Stripe Price if needed).
+        product: The Product the plan belongs to.
+        billing_cycle: Optional billing cycle override.
+        user_currency: Optional ISO 4217 code of the user's preferred currency.
+            When provided and differs from the plan's base currency, a
+            Stripe Price in the target currency is created/looked up so
+            the customer is charged in their own currency.
+
+    Returns:
+        The Stripe Checkout Session URL.
+
+    Raises:
+        ValueError: If the plan is free or no exchange rate is available.
+        stripe.StripeError: If the Stripe API call fails.
+    """
+    api_key = _get_stripe_api_key()
+
+    if plan.is_free:
+        raise ValueError("Cannot checkout a free plan. Use change-plan instead.")
+
+    # Auto-create Stripe Product & Price if not already linked.
+    # If the user's preferred currency differs from the plan's base
+    # currency, create/lookup a Stripe Price in the user's currency.
+    checkout_currency = user_currency or plan.currency
+    price_id = get_or_create_stripe_price_for_currency(plan, checkout_currency)
+
+    # Get or create Stripe Customer
+    customer_id = create_or_get_customer(user)
+
+    # --- Trial guard: only grant trial ONCE per product --------------------------
+    # Check if this user has already used a trial for this product.
+    # This prevents the exploit: Free → Standard (trial) → cancel → Free → Standard (trial again)
+    existing_sub = (
+        Subscription.objects.filter(user=user, product=product)
+        .order_by("-created_at")
+        .first()
+    )
+    trial_days = plan.trial_days if plan.trial_days > 0 else None
+    if existing_sub and existing_sub.has_used_trial:
+        trial_days = None  # No trial — they've already had one for this product
+        logger.info(
+            f"Trial skipped for user={user.email}, product={product.slug} "
+            f"— has_used_trial=True (previous trial consumed)"
+        )
+
+    # Build success/cancel URLs with product context
+    # Use urllib.parse to correctly merge params with existing query string.
+    # IMPORTANT: {CHECKOUT_SESSION_ID} is a Stripe template placeholder —
+    # Stripe replaces it at redirect time. It must NOT be URL-encoded,
+    # so we append it as raw text after encoding our own params.
+    from urllib.parse import urlencode, urlparse, urlunparse, parse_qs
+
+    # --- Success URL ---
+    base_success = settings.STRIPE_SUCCESS_URL.rstrip("/")
+    parsed = urlparse(base_success)
+    existing_params = parse_qs(parsed.query, keep_blank_values=True)
+    flat_params = {
+        k: v[0] if isinstance(v, list) else v for k, v in existing_params.items()
+    }
+    flat_params["product"] = product.slug
+    flat_params["plan"] = plan.slug
+    # Build URL with product/plan/checkout params encoded, then append the
+    # Stripe template placeholder as raw text (NOT urlencoded).
+    encoded_qs = urlencode(flat_params)
+    success_url = urlunparse(parsed._replace(query=encoded_qs))
+    if "?" in success_url:
+        success_url += "&session_id={CHECKOUT_SESSION_ID}"
+    else:
+        success_url += "?session_id={CHECKOUT_SESSION_ID}"
+
+    # --- Cancel URL ---
+    base_cancel = settings.STRIPE_CANCEL_URL.rstrip("/")
+    parsed_cancel = urlparse(base_cancel)
+    cancel_params = {
+        k: v[0] if isinstance(v, list) else v
+        for k, v in parse_qs(parsed_cancel.query, keep_blank_values=True).items()
+    }
+    cancel_params["product"] = product.slug
+    cancel_url = urlunparse(parsed_cancel._replace(query=urlencode(cancel_params)))
+
+    # --- F6: Guard — Stripe Tax must be explicitly enabled -----------------
+    # If STRIPE_TAX_ENABLED is not True, automatic_tax would silently
+    # return $0 tax, causing regulatory non-compliance. Block checkout
+    # until the admin explicitly enables tax in settings.
+    tax_enabled = getattr(settings, "STRIPE_TAX_ENABLED", False)
+    if not tax_enabled:
+        logger.critical(
+            "Stripe Tax is NOT enabled in settings! Add "
+            "STRIPE_TAX_ENABLED=True to your .env and activate "
+            "Stripe Tax in the Dashboard. Blocking checkout to prevent "
+            "selling without collecting tax."
+        )
+        raise ValueError(
+            "Tax collection is not configured. "
+            "Please contact support — checkout is temporarily disabled."
+        )
+
+    session = stripe.checkout.Session.create(
+        api_key=api_key,
+        mode="subscription",
+        customer=customer_id,
+        line_items=[
+            {
+                "price": price_id,
+                "quantity": 1,
+            }
+        ],
+        success_url=success_url,
+        cancel_url=cancel_url,
+        automatic_tax={"enabled": tax_enabled},
+        customer_update={"address": "auto"},
+        consent_collection={"terms_of_service": "required"},
+        metadata={
+            "user_id": str(user.id),
+            "product_slug": product.slug,
+            "plan_slug": plan.slug,
+        },
+        subscription_data={
+            "trial_period_days": trial_days,
+            "metadata": {
+                "user_id": str(user.id),
+                "product_slug": product.slug,
+                "plan_slug": plan.slug,
+            },
+        },
+        allow_promotion_codes=True,
+    )
+
+    logger.info(
+        f"Created Stripe checkout session {session.id} for "
+        f"user={user.email}, plan={plan.slug}, product={product.slug}"
+    )
+    return session.url
+
+
+# =============================================================================
+# Checkout Confirmation (direct activation — no webhook dependency)
+# =============================================================================
+
+
+def confirm_checkout_session(session_id: str, user) -> dict:
+    """Fetch a Stripe Checkout Session and activate the local subscription.
+
+    This is the PRIMARY activation path — called by the frontend when the
+    user is redirected back after successful checkout. It does NOT depend
+    on webhooks, making it reliable in all environments (local dev, behind
+    NAT, containerized, etc.).
+
+    The webhook handler (``_handle_checkout_completed``) remains as a
+    fallback/sync mechanism for edge cases where the redirect is interrupted.
+
+    Returns:
+        Dict with subscription data: ``{plan_name, status, trial_end, ...}``
+
+    Raises:
+        ValueError: If session is not found, not paid, or user mismatch.
+        stripe.StripeError: If the Stripe API call fails.
+    """
+    api_key = _get_stripe_api_key()
+
+    # 1. Retrieve the checkout session from Stripe
+    try:
+        raw_session = stripe.checkout.Session.retrieve(session_id, api_key=api_key)
+    except stripe.InvalidRequestError:
+        raise ValueError(f"Invalid checkout session: {session_id}")
+
+    # Convert Stripe object → plain dict (Stripe SDK returns objects, not dicts)
+    session = (
+        raw_session.to_dict() if hasattr(raw_session, "to_dict") else dict(raw_session)
+    )
+
+    # 2. Validate payment status
+    payment_status = session.get("payment_status")
+    if payment_status != "paid":
+        raise ValueError(
+            f"Checkout session {session_id} has not been paid "
+            f"(status: {payment_status})"
+        )
+
+    # 3. Validate user ownership (prevent session hijacking)
+    metadata = session.get("metadata") or {}
+    session_user_id = metadata.get("user_id")
+    if not session_user_id or str(session_user_id) != str(user.id):
+        raise ValueError("Checkout session does not belong to this user.")
+
+    product_slug = metadata.get("product_slug")
+    plan_slug = metadata.get("plan_slug")
+    if not product_slug or not plan_slug:
+        raise ValueError(f"Checkout session {session_id} is missing required metadata.")
+
+    # 4. Find the local subscription — use select_for_update() to prevent
+    #    race conditions when confirm and webhook fire simultaneously
+    from .services import BillingService
+
+    product = BillingService.get_product_by_slug(product_slug)
+    if not product:
+        raise ValueError(f"Product not found: {product_slug}")
+
+    plan = BillingService.get_plan_by_slug(product_slug, plan_slug)
+    if not plan:
+        raise ValueError(f"Plan not found: {product_slug}/{plan_slug}")
+
+    # F12: Denormalize currency from user profile
+    user_currency = getattr(user, "currency", plan.currency)
+
+    with transaction.atomic():
+        sub = (
+            Subscription.objects.select_for_update()
+            .filter(user=user, product=product)
+            .first()
+        )
+        if not sub:
+            sub = BillingService.get_or_create_free_subscription(user, product)
+        if not sub:
+            raise ValueError(
+                f"Could not get/create subscription for user={user.email}, "
+                f"product={product_slug}"
+            )
+
+        # 5. Fetch the Stripe subscription for full details
+        stripe_sub_id = session.get("subscription")
+        stripe_customer_id = session.get("customer") or ""
+
+        if stripe_sub_id:
+            raw_stripe_sub = stripe.Subscription.retrieve(
+                stripe_sub_id, api_key=api_key
+            )
+            stripe_sub = (
+                raw_stripe_sub.to_dict()
+                if hasattr(raw_stripe_sub, "to_dict")
+                else dict(raw_stripe_sub)
+            )
+
+            is_trialing = bool(
+                stripe_sub.get("trial_start") and stripe_sub.get("trial_end")
+            )
+
+            sub.plan = plan
+            sub.status = (
+                SubscriptionStatus.TRIALING
+                if is_trialing
+                else SubscriptionStatus.ACTIVE
+            )
+            sub.stripe_subscription_id = stripe_sub_id
+            sub.stripe_customer_id = stripe_customer_id
+            # F12: Store currency on subscription for frontend use
+            sub_currency = getattr(sub, "currency", None)
+            if sub_currency is None:
+                sub.currency = user_currency
+            sub.current_period_start = _ts_to_datetime(
+                stripe_sub.get("current_period_start")
+            )
+            sub.current_period_end = _ts_to_datetime(
+                stripe_sub.get("current_period_end")
+            )
+
+            if is_trialing:
+                sub.trial_start = _ts_to_datetime(stripe_sub.get("trial_start"))
+                sub.trial_end = _ts_to_datetime(stripe_sub.get("trial_end"))
+                sub.has_used_trial = True
+
+            sub.save()
+        else:
+            sub.plan = plan
+            sub.status = SubscriptionStatus.ACTIVE
+            sub.stripe_customer_id = stripe_customer_id
+            sub_currency = getattr(sub, "currency", None)
+            if sub_currency is None:
+                sub.currency = user_currency
+            sub.save()
+
+    logger.info(
+        f"Checkout confirmed: user={user.email}, plan={plan_slug}, "
+        f"sub={sub.id}, status={sub.status}, session={session_id}"
+    )
+
+    return {
+        "plan_name": plan.name,
+        "plan_slug": plan.slug,
+        "status": sub.status,
+        "trial_end": sub.trial_end,
+        "current_period_end": sub.current_period_end,
+    }
+
+
+# =============================================================================
+# Customer Portal
+# =============================================================================
+
+
+def create_portal_session(user, return_url: Optional[str] = None) -> str:
+    """Create a Stripe Customer Portal session.
+
+    The portal allows users to manage their payment methods, view invoices,
+    and cancel subscriptions directly in Stripe's hosted UI.
+
+    Args:
+        user: The Django user.
+        return_url: Override return URL (defaults to settings).
+
+    Returns:
+        The Stripe Customer Portal URL.
+
+    Raises:
+        ValueError: If the user has no Stripe customer ID.
+        stripe.StripeError: If the Stripe API call fails.
+    """
+    api_key = _get_stripe_api_key()
+    _return_url = return_url or settings.STRIPE_PORTAL_RETURN_URL
+
+    # Find user's Stripe customer ID
+    sub = (
+        Subscription.objects.filter(user=user)
+        .exclude(stripe_customer_id="")
+        .exclude(stripe_customer_id__isnull=True)
+        .first()
+    )
+
+    if not sub or not sub.stripe_customer_id:
+        raise ValueError(
+            "No Stripe customer found for this user. " "Complete a checkout first."
+        )
+
+    session = stripe.billing_portal.Session.create(
+        api_key=api_key,
+        customer=sub.stripe_customer_id,
+        return_url=_return_url,
+    )
+
+    logger.info(f"Created Stripe portal session {session.id} for user {user.email}")
+    return session.url
+
+
+# =============================================================================
+# Webhook Processing
+# =============================================================================
+
+
+# Events we handle — others are logged but ignored
+HANDLED_EVENT_TYPES = {
+    "checkout.session.completed",
+    "customer.subscription.created",
+    "customer.subscription.updated",
+    "customer.subscription.deleted",
+    "invoice.payment_succeeded",
+    "invoice.payment_failed",
+    "customer.subscription.trial_will_end",
+    "charge.refunded",
+    "customer.updated",
+    "invoice.created",
+}
+
+
+def verify_and_parse_webhook(payload: bytes, sig_header: str) -> dict:
+    """Verify the Stripe webhook signature and return the event dict.
+
+    Args:
+        payload: Raw request body bytes.
+        sig_header: Value of the ``Stripe-Signature`` header.
+
+    Returns:
+        The parsed Stripe event as a plain ``dict`` (JSON-serializable).
+
+    Raises:
+        ValueError: If webhook secret is not configured.
+        stripe.SignatureVerificationError: If signature verification fails.
+    """
+    webhook_secret = settings.STRIPE_WEBHOOK_SECRET
+    if not webhook_secret:
+        raise ValueError(
+            "Stripe webhook secret not configured. "
+            "Set SF_STRIPE_WEBHOOK_SECRET in your .env file."
+        )
+
+    # Verify the signature (raises on failure)
+    stripe.Webhook.construct_event(payload, sig_header, webhook_secret)
+
+    # Parse the raw payload as a plain dict — guaranteed JSON-serializable
+    # because it comes straight from Stripe's JSON body.
+    return json.loads(payload.decode("utf-8"))
+
+
+def record_webhook_event(event: dict) -> Optional[WebhookEventLog]:
+    """Record a webhook event in the audit log.
+
+    If the event ID already exists (duplicate delivery), returns the
+    existing record without creating a new one.
+
+    Args:
+        event: Parsed Stripe event dict.
+
+    Returns:
+        The WebhookEventLog instance (new or existing), or None if
+        there was a DB error.
+    """
+    event_id = event["id"]
+    event_type = event["type"]
+
+    try:
+        log_entry, created = WebhookEventLog.objects.get_or_create(
+            event_id=event_id,
+            defaults={
+                "event_type": event_type,
+                "payload": event,
+            },
+        )
+
+        if created:
+            logger.info(f"Recorded new webhook event: {event_type} ({event_id})")
+        else:
+            logger.info(f"Duplicate webhook event skipped: {event_type} ({event_id})")
+
+        return log_entry
+    except Exception as e:
+        logger.error(f"Failed to record webhook event {event_id}: {e}")
+        return None
+
+
+def process_webhook_event(event: dict) -> None:
+    """Route a verified webhook event to the appropriate handler.
+
+    Called after signature verification and event logging. Only events
+    in ``HANDLED_EVENT_TYPES`` are processed — others are silently
+    ignored (but already logged).
+
+    Wraps each handler in ``transaction.atomic()`` so that DB changes
+    from ``select_for_update()`` are properly committed.  A time limit
+    prevents hung Stripe API calls from blocking the endpoint.
+
+    Args:
+        event: Parsed Stripe event dict.
+    """
+    event_type = event["type"]
+    event_id = event["id"]
+
+    if event_type not in HANDLED_EVENT_TYPES:
+        logger.info(f"Ignoring unhandled event type: {event_type}")
+        return
+
+    try:
+        handler = EVENT_HANDLERS.get(event_type)
+        if handler:
+            with _webhook_timeout(WEBHOOK_PROCESSING_TIMEOUT):
+                with transaction.atomic():
+                    handler(event)
+            # Mark as processed
+            WebhookEventLog.objects.filter(event_id=event_id).update(processed=True)
+            logger.info(f"Successfully processed webhook: {event_type} ({event_id})")
+        else:
+            logger.warning(f"No handler for event type: {event_type}")
+
+    except TimeoutError:
+        error_msg = f"Webhook processing timed out after {WEBHOOK_PROCESSING_TIMEOUT}s"
+        logger.error(
+            f"Failed to process webhook {event_type} ({event_id}): {error_msg}",
+            exc_info=True,
+        )
+        WebhookEventLog.objects.filter(event_id=event_id).update(
+            processed=False,
+            error_message=error_msg[:500],
+        )
+    except Exception as e:
+        error_msg = f"{type(e).__name__}: {e}"
+        logger.error(
+            f"Failed to process webhook {event_type} ({event_id}): {error_msg}",
+            exc_info=True,
+        )
+        WebhookEventLog.objects.filter(event_id=event_id).update(
+            processed=False,
+            error_message=error_msg[:500],
+        )
+
+
+# =============================================================================
+# Individual Event Handlers
+# =============================================================================
+
+
+def _handle_checkout_completed(event: dict) -> None:
+    """Handle checkout.session.completed — activate subscription after payment.
+
+    Creates or updates the subscription with the Stripe subscription data.
+    If a trial was started, sets status to trialing.
+    """
+    session = event["data"]["object"]
+    metadata = session.get("metadata", {})
+    user_id = metadata.get("user_id")
+    product_slug = metadata.get("product_slug")
+    plan_slug = metadata.get("plan_slug")
+
+    if not all([user_id, product_slug, plan_slug]):
+        logger.warning(
+            f"checkout.session.completed missing metadata: {session.get('id')}"
+        )
+        return
+
+    stripe_sub = session.get("subscription_details", {})
+    stripe_sub_id = session.get("subscription") or stripe_sub.get("id")
+
+    if not stripe_sub_id:
+        logger.warning(
+            f"checkout.session.completed has no subscription ID: {session.get('id')}"
+        )
+        return
+
+    from django.contrib.auth import get_user_model
+
+    User = get_user_model()
+    try:
+        user = User.objects.get(id=int(user_id))
+    except (User.DoesNotExist, ValueError):
+        logger.error(f"User not found for checkout webhook: user_id={user_id}")
+        return
+
+    from .services import BillingService
+
+    # Get or create subscription for this user+product
+    product = BillingService.get_product_by_slug(product_slug)
+    if not product:
+        logger.error(f"Product not found: {product_slug}")
+        return
+
+    plan = BillingService.get_plan_by_slug(product_slug, plan_slug)
+    if not plan:
+        logger.error(f"Plan not found: {product_slug}/{plan_slug}")
+        return
+
+    # F4: Use select_for_update() to prevent race condition when
+    # confirm_checkout_session and this webhook fire simultaneously.
+    sub = (
+        Subscription.objects.select_for_update()
+        .filter(user=user, product=product)
+        .first()
+    )
+    if not sub:
+        sub = BillingService.get_or_create_free_subscription(user, product)
+    if not sub:
+        logger.error(
+            f"Could not get/create subscription for user={user.email}, "
+            f"product={product_slug}"
+        )
+        return
+
+    # Update subscription with Stripe data
+    sub.plan = plan
+    sub.status = (
+        SubscriptionStatus.TRIALING
+        if session.get("setup_intent")
+        else SubscriptionStatus.ACTIVE
+    )
+    sub.stripe_subscription_id = stripe_sub_id
+    sub.stripe_customer_id = session.get("customer", "")
+
+    # Set billing period from the Stripe subscription
+    stripe_subscription = stripe.Subscription.retrieve(
+        stripe_sub_id, api_key=_get_stripe_api_key()
+    )
+    sub.current_period_start = _ts_to_datetime(stripe_subscription.current_period_start)
+    sub.current_period_end = _ts_to_datetime(stripe_subscription.current_period_end)
+
+    if stripe_subscription.trial_start and stripe_subscription.trial_end:
+        sub.trial_start = _ts_to_datetime(stripe_subscription.trial_start)
+        sub.trial_end = _ts_to_datetime(stripe_subscription.trial_end)
+        sub.status = SubscriptionStatus.TRIALING
+        sub.has_used_trial = True  # Mark trial as consumed — one trial per product ever
+
+    # F12: Denormalize currency from user profile
+    user_currency = getattr(user, "currency", plan.currency)
+    if not sub.currency:
+        sub.currency = user_currency
+
+    sub.save()
+    logger.info(
+        f"Checkout completed: user={user.email}, plan={plan_slug}, "
+        f"sub={sub.id}, status={sub.status}"
+    )
+
+
+def _handle_subscription_created(event: dict) -> None:
+    """Handle customer.subscription.created — log new subscription."""
+    stripe_sub = event["data"]["object"]
+    metadata = stripe_sub.get("metadata", {})
+    user_id = metadata.get("user_id")
+    logger.info(
+        f"Stripe subscription created: {stripe_sub.get('id')} "
+        f"for user={user_id}, status={stripe_sub.get('status')}"
+    )
+
+
+def _handle_subscription_updated(event: dict) -> None:
+    """Handle customer.subscription.updated — sync status and period dates.
+
+    This is the primary webhook for keeping local state in sync with Stripe.
+    Handles plan changes, cancellations, past_due, and period updates.
+
+    Uses ``select_for_update()`` to prevent concurrent webhook processing
+    from causing race conditions on the same subscription row.
+    """
+    stripe_sub = event["data"]["object"]
+    stripe_sub_id = stripe_sub["id"]
+    metadata = stripe_sub.get("metadata", {})
+
+    try:
+        sub = Subscription.objects.select_for_update().get(
+            stripe_subscription_id=stripe_sub_id
+        )
+    except Subscription.DoesNotExist:
+        logger.warning(
+            f"subscription.updated: local subscription not found for "
+            f"stripe_sub={stripe_sub_id}"
+        )
+        return
+
+    # Map Stripe status to our status
+    stripe_status = _safe_get(stripe_sub, "status", "")
+    status_map = {
+        "active": SubscriptionStatus.ACTIVE,
+        "trialing": SubscriptionStatus.TRIALING,
+        "past_due": SubscriptionStatus.PAST_DUE,
+        "canceled": SubscriptionStatus.CANCELED,
+        "paused": SubscriptionStatus.PAUSED,
+        "unpaid": SubscriptionStatus.PAST_DUE,
+    }
+    new_status = status_map.get(stripe_status, sub.status)
+
+    # Detect plan change by stripe price ID
+    items = _get_subscription_items(stripe_sub)
+    if items:
+        price_obj = _safe_get(items[0], "price", {})
+        stripe_price_id = _safe_get(price_obj, "id") if price_obj else None
+        if stripe_price_id and stripe_price_id != sub.plan.stripe_price_id:
+            new_plan = (
+                Plan.objects.filter(stripe_price_id=stripe_price_id)
+                .select_related("product")
+                .first()
+            )
+            if new_plan:
+                sub.plan = new_plan
+                logger.info(
+                    f"Plan changed via webhook: {sub.plan.slug} -> {new_plan.slug}"
+                )
+
+    sub.status = new_status
+    sub.current_period_start = _ts_to_datetime(
+        _safe_get(stripe_sub, "current_period_start")
+    )
+    sub.current_period_end = _ts_to_datetime(
+        _safe_get(stripe_sub, "current_period_end")
+    )
+
+    if _safe_get(stripe_sub, "trial_start") and _safe_get(stripe_sub, "trial_end"):
+        sub.trial_start = _ts_to_datetime(_safe_get(stripe_sub, "trial_start"))
+        sub.trial_end = _ts_to_datetime(_safe_get(stripe_sub, "trial_end"))
+
+    if _safe_get(stripe_sub, "canceled_at"):
+        sub.canceled_at = _ts_to_datetime(_safe_get(stripe_sub, "canceled_at"))
+
+    sub.stripe_customer_id = _safe_get(stripe_sub, "customer", sub.stripe_customer_id)
+    sub.save()
+
+    logger.info(
+        f"Subscription updated via webhook: sub={sub.id}, "
+        f"status={new_status}, stripe_sub={stripe_sub_id}"
+    )
+
+
+def _handle_subscription_deleted(event: dict) -> None:
+    """Handle customer.subscription.deleted — mark subscription as expired.
+
+    Uses ``select_for_update()`` to prevent race conditions when
+    multiple webhooks for the same subscription arrive simultaneously.
+    """
+    stripe_sub = event["data"]["object"]
+    stripe_sub_id = stripe_sub["id"]
+
+    try:
+        sub = Subscription.objects.select_for_update().get(
+            stripe_subscription_id=stripe_sub_id
+        )
+    except Subscription.DoesNotExist:
+        logger.warning(
+            f"subscription.deleted: local subscription not found for "
+            f"stripe_sub={stripe_sub_id}"
+        )
+        return
+
+    sub.status = SubscriptionStatus.EXPIRED
+    sub.current_period_end = (
+        _ts_to_datetime(stripe_sub.get("ended_at")) or timezone.now()
+    )
+    sub.save()
+
+    logger.info(
+        f"Subscription expired via webhook: sub={sub.id}, stripe_sub={stripe_sub_id}"
+    )
+
+
+def _handle_invoice_payment_succeeded(event: dict) -> None:
+    """Handle invoice.payment_succeeded — mark subscription as active.
+
+    Uses ``select_for_update()`` to prevent concurrent invoice webhooks
+    from causing stale state.
+    """
+    invoice = event["data"]["object"]
+    stripe_sub_id = invoice.get("subscription")
+
+    if not stripe_sub_id:
+        return
+
+    try:
+        sub = Subscription.objects.select_for_update().get(
+            stripe_subscription_id=stripe_sub_id
+        )
+    except Subscription.DoesNotExist:
+        return
+
+    # If subscription was past_due, reactivate it
+    if sub.status in (SubscriptionStatus.PAST_DUE,):
+        sub.status = SubscriptionStatus.ACTIVE
+
+    # Update period dates from the invoice's lines
+    sub.current_period_start = _ts_to_datetime(invoice.get("period_start"))
+    sub.current_period_end = _ts_to_datetime(invoice.get("period_end"))
+    sub.save()
+
+    # Log invoice details for support queries
+    invoice_number = invoice.get("number")
+    hosted_url = invoice.get("hosted_invoice_url")
+    logger.info(f"Invoice {invoice_number}: {hosted_url}")
+
+    logger.info(f"Payment succeeded: sub={sub.id}, status={sub.status}")
+
+
+def _handle_invoice_payment_failed(event: dict) -> None:
+    """Handle invoice.payment_failed — mark subscription as past_due.
+
+    Uses ``select_for_update()`` to prevent race conditions between
+    payment_failed and payment_succeeded webhooks arriving close together.
+    """
+    invoice = event["data"]["object"]
+    stripe_sub_id = invoice.get("subscription")
+
+    if not stripe_sub_id:
+        return
+
+    try:
+        sub = Subscription.objects.select_for_update().get(
+            stripe_subscription_id=stripe_sub_id
+        )
+    except Subscription.DoesNotExist:
+        return
+
+    sub.status = SubscriptionStatus.PAST_DUE
+    sub.save()
+
+    # Log invoice details for support queries
+    invoice_number = invoice.get("number")
+    hosted_url = invoice.get("hosted_invoice_url")
+    attempt = invoice.get("attempt_count", 1)
+    next_retry = _ts_to_datetime(invoice.get("next_payment_attempt"))
+    logger.warning(
+        f"Payment failed attempt {attempt} for sub={sub.id}, "
+        f"stripe_sub={stripe_sub_id}. Next retry: {next_retry}. "
+        f"User needs to update payment method via Portal. "
+        f"Invoice {invoice_number}: {hosted_url}"
+    )
+
+
+def _handle_trial_will_end(event: dict) -> None:
+    """Handle customer.subscription.trial_will_end — log notification.
+
+    Actual email notification is handled by the Celery task in Phase 5.
+    For now we just log it.
+    """
+    stripe_sub = event["data"]["object"]
+    trial_end = stripe_sub.get("trial_end")
+
+    try:
+        sub = Subscription.objects.select_for_update().get(
+            stripe_subscription_id=stripe_sub["id"]
+        )
+        logger.info(
+            f"Trial ending soon: user_id={sub.user_id}, "
+            f"plan={sub.plan.slug}, trial_end={trial_end}"
+        )
+    except Subscription.DoesNotExist:
+        logger.warning(
+            f"trial_will_end: subscription not found for {stripe_sub.get('id')}"
+        )
+
+
+def _handle_charge_refunded(event: dict) -> None:
+    """Handle charge.refunded — create local Refund record from Stripe-initiated refund.
+
+    Covers refunds initiated via Stripe Dashboard or external systems.
+    Without this handler, such refunds would have no local audit trail.
+    """
+    charge = event["data"]["object"]
+    charge_id = charge.get("id")
+    refund_obj = (
+        charge.get("refunds", {}).get("data", [None])[0]
+        if charge.get("refunds")
+        else None
+    )
+
+    if not refund_obj:
+        logger.info(f"charge.refunded {charge_id} has no refund object — ignoring")
+        return
+
+    refund_id = refund_obj.get("id")
+    amount = refund_obj.get("amount", 0)
+    currency = charge.get("currency", "USD")
+    status = refund_obj.get("status", "pending")  # pending, succeeded, failed
+
+    if not refund_id:
+        logger.warning(f"charge.refunded {charge_id}: refund object has no ID")
+        return
+
+    # Find subscription by matching payment_intent
+    payment_intent_id = charge.get("payment_intent")
+    if not payment_intent_id:
+        logger.info(
+            f"charge.refunded {charge_id}: no payment_intent — cannot link to subscription"
+        )
+        return
+
+    # Find subscription that has an invoice with this payment_intent
+    from .models import Refund, RefundStatus
+
+    try:
+        sub = Subscription.objects.filter(
+            stripe_subscription_id__isnull=False,
+        ).first()
+        if not sub:
+            return
+
+        # Check for duplicate refund ID
+        if Refund.objects.filter(stripe_refund_id=refund_id).exists():
+            logger.info(f"Refund {refund_id} already recorded locally — skipping")
+            return
+
+        Refund.objects.create(
+            subscription=sub,
+            stripe_refund_id=refund_id,
+            stripe_charge_id=payment_intent_id,
+            amount_cents=amount,
+            currency=currency,
+            reason=f"Refund via Stripe Dashboard (charge {charge_id})",
+            status=(
+                RefundStatus.COMPLETED
+                if status == "succeeded"
+                else RefundStatus.PENDING
+            ),
+            initiated_by=None,
+            stripe_response=refund_obj,
+        )
+        logger.info(
+            f"Refund record created from charge.refunded: refund={refund_id}, "
+            f"amount={amount/100:.2f} {currency}, sub={sub.id}"
+        )
+    except Exception as e:
+        logger.error(f"Failed to create refund record from charge.refunded: {e}")
+
+
+def _handle_customer_updated(event: dict) -> None:
+    """Handle customer.updated — sync Stripe customer data to local user.
+
+    When a user updates their email, name, or address in Stripe Portal,
+    this webhook ensures the local user record stays in sync.
+    Important for GDPR — customer data must be consistent across systems.
+    """
+    customer = event["data"]["object"]
+    customer_id = customer.get("id")
+    email = customer.get("email")
+    name = customer.get("name")
+    metadata = customer.get("metadata", {})
+
+    if not customer_id:
+        return
+
+    # Find local subscription by Stripe customer ID
+    try:
+        sub = (
+            Subscription.objects.select_for_update()
+            .filter(stripe_customer_id=customer_id)
+            .first()
+        )
+        if not sub:
+            return
+
+        user = sub.user
+
+        # Sync email if changed
+        stripe_email = customer.get("email")
+        if stripe_email and stripe_email != user.email:
+            user.email = stripe_email
+            logger.info(f"Synced email from Stripe for user {user.id}: {stripe_email}")
+
+        # Sync name if changed
+        stripe_name = customer.get("name")
+        if stripe_name:
+            parts = stripe_name.strip().split(" ", 1)
+            if parts[0]:
+                user.first_name = parts[0]
+            if len(parts) > 1:
+                user.last_name = parts[1]
+            logger.info(f"Synced name from Stripe for user {user.id}: {stripe_name}")
+
+        # Sync currency from metadata if set
+        stripe_currency = metadata.get("preferred_currency")
+        if stripe_currency and hasattr(user, "currency"):
+            valid_currencies = [
+                c[0]
+                for c in getattr(
+                    user.__class__, "CurrencyChoices", type("C", (), {"choices": ()})
+                )
+            ]
+            if stripe_currency in valid_currencies:
+                user.currency = stripe_currency
+                logger.info(
+                    f"Synced currency from Stripe for user {user.id}: {stripe_currency}"
+                )
+
+        user.save()
+        logger.info(f"Customer data synced from Stripe for user {user.id}")
+
+    except Exception as e:
+        logger.error(f"Failed to sync customer data for {customer_id}: {e}")
+
+
+def _handle_invoice_created(event: dict) -> None:
+    """Handle invoice.created — log invoice creation for audit trail.
+
+    Every new invoice (including draft invoices) is logged. This provides
+    a complete financial paper trail for accounting and tax audits.
+    """
+    invoice = event["data"]["object"]
+    invoice_id = invoice.get("id")
+    invoice_number = invoice.get("number")
+    amount_due = invoice.get("amount_due", 0)
+    currency = invoice.get("currency", "USD")
+    status = invoice.get("status")
+    hosted_url = invoice.get("hosted_invoice_url")
+
+    logger.info(
+        f"Invoice created: {invoice_number} ({invoice_id}), "
+        f"amount_due={amount_due/100:.2f} {currency}, status={status}, "
+        f"url={hosted_url}"
+    )
+
+
+# =============================================================================
+# Event Handler Dispatch Map
+# =============================================================================
+
+EVENT_HANDLERS = {
+    "checkout.session.completed": _handle_checkout_completed,
+    "customer.subscription.created": _handle_subscription_created,
+    "customer.subscription.updated": _handle_subscription_updated,
+    "customer.subscription.deleted": _handle_subscription_deleted,
+    "invoice.payment_succeeded": _handle_invoice_payment_succeeded,
+    "invoice.payment_failed": _handle_invoice_payment_failed,
+    "customer.subscription.trial_will_end": _handle_trial_will_end,
+    "charge.refunded": _handle_charge_refunded,
+    "customer.updated": _handle_customer_updated,
+    "invoice.created": _handle_invoice_created,
+}
+
+
+# =============================================================================
+# Helpers
+# =============================================================================
+
+
+def _ts_to_datetime(timestamp) -> Optional[timezone.datetime]:
+    """Convert a Unix timestamp to a timezone-aware datetime, or None."""
+    if not timestamp:
+        return None
+    try:
+        from datetime import timezone as dt_tz, datetime as dt
+
+        return dt.fromtimestamp(int(timestamp), tz=dt_tz.utc)
+    except (ValueError, TypeError, OSError):
+        return None
+
+
+@contextmanager
+def _webhook_timeout(seconds: int):
+    """Context manager that raises TimeoutError after *seconds*.
+
+    Uses SIGALRM (Unix-only).  Falls back to no-op on platforms without
+    signal support (e.g., Windows).  Must not be nested.
+    """
+
+    def _raise_timeout(signum, frame):
+        raise TimeoutError(f"Webhook processing exceeded {seconds}s limit")
+
+    try:
+        signal.signal(signal.SIGALRM, _raise_timeout)
+        signal.alarm(seconds)
+        yield
+    finally:
+        signal.alarm(0)
+        # Restore default handler
+        try:
+            signal.signal(signal.SIGALRM, signal.SIG_DFL)
+        except (ValueError, OSError):
+            pass
+
+
+# =============================================================================
+# Refund (H1)
+# =============================================================================
+
+
+def create_stripe_refund(subscription, amount_cents=None, reason="", initiated_by=None):
+    """Create a Stripe refund for the latest payment on a subscription.
+
+    Retrieves the latest invoice's payment intent and issues a refund.
+    If amount_cents is None, refunds the full payment amount.
+
+    Args:
+        subscription: The Subscription object (must have stripe_subscription_id).
+        amount_cents: Optional amount in cents to refund. None = full amount.
+        reason: Reason for the refund (visible to customer).
+        initiated_by: User/admin who initiated the refund.
+
+    Returns:
+        The created Refund model instance.
+
+    Raises:
+        ValueError: If subscription has no Stripe subscription or no payment history.
+        stripe.StripeError: If the Stripe API call fails.
+    """
+    from .models import Refund, RefundStatus
+
+    if not subscription.stripe_subscription_id:
+        raise ValueError("Subscription has no Stripe subscription ID.")
+
+    api_key = _get_stripe_api_key()
+
+    # Get the Stripe subscription to find the latest invoice
+    stripe_sub = stripe.Subscription.retrieve(
+        subscription.stripe_subscription_id, api_key=api_key
+    )
+    latest_invoice_id = _safe_get(stripe_sub, "latest_invoice")
+    if not latest_invoice_id:
+        raise ValueError("No invoices found for this subscription.")
+
+    # Get the invoice to find the payment intent
+    invoice = stripe.Invoice.retrieve(latest_invoice_id, api_key=api_key)
+    payment_intent_id = _safe_get(invoice, "payment_intent")
+    if not payment_intent_id:
+        raise ValueError("No payment found on the latest invoice.")
+
+    currency = _safe_get(invoice, "currency", subscription.plan.currency)
+
+    # Create the refund
+    refund_params = {
+        "api_key": api_key,
+        "payment_intent": payment_intent_id,
+        "reason": "requested_by_customer",
+        "metadata": {
+            "subscription_id": str(subscription.id),
+            "reason": reason,
+            "initiated_by": str(initiated_by.id) if initiated_by else "system",
+        },
+    }
+    if amount_cents is not None:
+        refund_params["amount"] = amount_cents
+
+    # F3: Idempotency key prevents double-refund on network retries
+    # Format: refund-{subscription_id}-{payment_intent_id}-{timestamp}
+    idempotency_key = f"refund-{subscription.id}-{payment_intent_id}-{int(time.time())}"
+    stripe_refund = stripe.Refund.create(
+        **refund_params,
+        idempotency_key=idempotency_key,
+    )
+
+    # Create local Refund record
+    refund = Refund.objects.create(
+        subscription=subscription,
+        stripe_refund_id=stripe_refund.id,
+        stripe_charge_id=payment_intent_id,
+        amount_cents=amount_cents or stripe_refund.amount,
+        currency=currency,
+        reason=reason,
+        status=(
+            RefundStatus.COMPLETED
+            if stripe_refund.status == "succeeded"
+            else RefundStatus.PENDING
+        ),
+        initiated_by=initiated_by,
+        stripe_response=(
+            stripe_refund.to_dict()
+            if hasattr(stripe_refund, "to_dict")
+            else dict(stripe_refund)
+        ),
+    )
+
+    logger.info(
+        f"Refund created: sub={subscription.id}, amount={refund.amount_cents/100:.2f} {currency}, "
+        f"stripe_refund={stripe_refund.id}, status={refund.status}"
+    )
+    return refund
+
+
+# =============================================================================
+# Proration Preview (M3)
+# =============================================================================
+
+
+def get_proration_preview(subscription, new_plan):
+    """Get a proration preview for a plan change.
+
+    Calls Stripe's retrieve_upcoming API to show what the user will be
+    charged/credited if they switch plans mid-cycle.
+
+    Args:
+        subscription: The current Subscription (must have Stripe IDs).
+        new_plan: The Plan the user wants to switch to.
+
+    Returns:
+        Dict with subtotal, tax, total, next_billing, currency.
+
+    Raises:
+        ValueError: If subscription has no Stripe subscription ID.
+        stripe.StripeError: If the Stripe API call fails.
+    """
+    if not subscription.stripe_subscription_id:
+        raise ValueError("Subscription has no Stripe subscription ID — cannot preview.")
+
+    api_key = _get_stripe_api_key()
+
+    stripe_sub = stripe.Subscription.retrieve(
+        subscription.stripe_subscription_id, api_key=api_key
+    )
+    items = _get_subscription_items(stripe_sub)
+
+    if not items:
+        raise ValueError("Stripe subscription has no items \u2014 cannot preview.")
+
+    # Use the EXISTING subscription's currency for the preview price
+    existing_currency = _safe_get(stripe_sub, "currency", "usd") or "usd"
+    price_id = get_or_create_stripe_price_for_currency(new_plan, existing_currency)
+
+    preview = stripe.Subscription.retrieve_upcoming(
+        api_key=api_key,
+        customer=subscription.stripe_customer_id,
+        subscription=subscription.stripe_subscription_id,
+        subscription_items=[{"id": items[0].id, "price": price_id}],
+    )
+
+    # Use the preview's actual currency (matches the existing subscription)
+    preview_currency = (
+        _safe_get(preview, "currency", existing_currency) or existing_currency
+    )
+    return {
+        "subtotal": (_safe_get(preview, "subtotal_excluding_tax", 0) or 0) / 100,
+        "tax": (_safe_get(preview, "tax", 0) or 0) / 100,
+        "total": (_safe_get(preview, "total", 0) or 0) / 100,
+        "next_billing": (_safe_get(preview, "amount_due", 0) or 0) / 100,
+        "currency": preview_currency.upper(),
+    }
+
+
+# =============================================================================
+# GDPR Customer Deletion (M2)
+# =============================================================================
+
+
+def delete_stripe_customer(user):
+    """Delete or anonymize a user's Stripe Customer for GDPR compliance.
+
+    If the customer has no active subscriptions, deletes the Stripe Customer
+    record entirely. If active subscriptions exist, anonymizes the customer
+    data instead (GDPR right to erasure — data minimization approach).
+
+    Args:
+        user: The Django user being deleted.
+
+    Returns:
+        True if customer was deleted/anonymized, False if no customer found.
+    """
+    api_key = _get_stripe_api_key()
+
+    subs = (
+        Subscription.objects.filter(user=user)
+        .exclude(stripe_customer_id="")
+        .exclude(stripe_customer_id__isnull=True)
+    )
+    if not subs.exists():
+        return False
+
+    customer_id = subs.first().stripe_customer_id
+
+    # Check if any subscription is still active/trialing
+    active_subs = subs.filter(
+        status__in=(SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIALING)
+    )
+    has_active = active_subs.exists()
+
+    try:
+        if has_active:
+            # Cannot delete — anonymize instead
+            stripe.Customer.modify(
+                customer_id,
+                api_key=api_key,
+                email=f"deleted_{user.id}@redacted.com",
+                name="Deleted User",
+                metadata={"gdpr_anonymized": "true", "original_user_id": str(user.id)},
+            )
+            logger.info(
+                f"Anonymized Stripe customer {customer_id} for user {user.id} "
+                f"(active subscriptions exist)"
+            )
+        else:
+            # Safe to delete
+            stripe.Customer.delete(customer_id, api_key=api_key)
+            logger.info(f"Deleted Stripe customer {customer_id} for user {user.id}")
+
+        # Clear local references
+        subs.update(
+            stripe_customer_id="",
+            update_fields=["stripe_customer_id", "updated_at"],
+        )
+        return True
+
+    except stripe.InvalidRequestError as e:
+        if "No such customer" in str(e):
+            logger.warning(f"Stripe customer {customer_id} already deleted")
+            subs.update(
+                stripe_customer_id="",
+                update_fields=["stripe_customer_id", "updated_at"],
+            )
+            return True
+        raise
+
+
+# =============================================================================
+# Webhook Reconciliation (I2)
+# =============================================================================
+
+
+def reconcile_unprocessed_webhooks(max_age_hours: int = 24) -> dict:
+    """Find and retry unprocessed webhook events older than a threshold.
+
+    Designed to be called by a periodic Celery task to catch any webhooks
+    that were recorded but failed during processing (e.g., DB timeout,
+    transient Stripe error).
+
+    Args:
+        max_age_hours: Only retry events created within this window.
+
+    Returns:
+        Dict with 'retried', 'succeeded', 'failed' counts.
+    """
+    from django.utils import timezone
+
+    cutoff = timezone.now() - timezone.timedelta(hours=max_age_hours)
+
+    unprocessed = WebhookEventLog.objects.filter(
+        processed=False,
+        error_message__gt="",  # Has an error (was attempted, not just recorded)
+        created_at__gte=cutoff,
+    ).order_by("created_at")[
+        :50
+    ]  # Batch limit
+
+    result = {"retried": 0, "succeeded": 0, "failed": 0}
+
+    for log_entry in unprocessed:
+        event = log_entry.payload
+        if not event:
+            continue
+
+        result["retried"] += 1
+        try:
+            process_webhook_event(event)
+            result["succeeded"] += 1
+        except Exception as e:
+            result["failed"] += 1
+            log_entry.error_message = (
+                f"Reconcile failed: {type(e).__name__}: {str(e)[:400]}"
+            )
+            log_entry.save(update_fields=["error_message", "updated_at"])
+            logger.error(f"Webhook reconciliation failed for {log_entry.event_id}: {e}")
+
+    logger.info(
+        f"Webhook reconciliation complete: {result['retried']} retried, "
+        f"{result['succeeded']} succeeded, {result['failed']} failed"
+    )
+    return result
+
+
+# =============================================================================
+# Transaction History — F11 (Pull from Stripe, no local model)
+# =============================================================================
+
+
+def get_transaction_history(
+    user, limit: int = 25, starting_after: Optional[str] = None
+) -> dict:
+    """Pull transaction/invoice history from Stripe for a user.
+
+    Instead of maintaining a local billing ledger model, this function
+    pulls invoice and charge data directly from Stripe on demand.
+    This is the recommended approach — Stripe is the source of truth
+    for financial records and provides built-in audit capabilities.
+
+    Returns a paginated list of transactions (invoices + charges) sorted
+    by creation date descending.
+
+    Args:
+        user: The Django user.
+        limit: Max number of transactions to return (default 25).
+        starting_after: Stripe cursor for pagination (last invoice ID from previous page).
+
+    Returns:
+        Dict with 'transactions' (list), 'has_more' (bool), 'currency' (str).
+    """
+    api_key = _get_stripe_key() if False else _get_stripe_api_key()
+
+    # Find user's Stripe customer ID
+    sub = (
+        Subscription.objects.filter(user=user)
+        .exclude(stripe_customer_id="")
+        .exclude(stripe_customer_id__isnull=True)
+        .first()
+    )
+    if not sub or not sub.stripe_customer_id:
+        return {"transactions": [], "has_more": False, "currency": "USD"}
+
+    customer_id = sub.stripe_customer_id
+    default_currency = getattr(user, "currency", "USD")
+
+    # Fetch invoices
+    invoice_params = {
+        "api_key": api_key,
+        "customer": customer_id,
+        "limit": limit,
+        "expand": ["data.charge"],
+    }
+    if starting_after:
+        invoice_params["starting_after"] = starting_after
+
+    invoices = stripe.Invoice.list(**invoice_params)
+    transactions = []
+
+    for inv in invoices.auto_paging_iter:
+        # Extract charge details if available
+        charge = _safe_get(inv, "charge") or {}
+        if isinstance(charge, dict):
+            charge_data = charge
+        else:
+            charge_data = charge.to_dict() if hasattr(charge, "to_dict") else {}
+
+        transactions.append(
+            {
+                "id": inv.id,
+                "type": "invoice",
+                "number": _safe_get(inv, "number"),
+                "status": _safe_get(
+                    inv, "status"
+                ),  # draft, open, paid, uncollectible, void
+                "amount_paid": (_safe_get(inv, "amount_paid", 0) or 0) / 100,
+                "amount_due": (_safe_get(inv, "amount_due", 0) or 0) / 100,
+                "tax": (_safe_get(inv, "tax", 0) or 0) / 100,
+                "currency": (_safe_get(inv, "currency") or default_currency).upper(),
+                "description": _safe_get(inv, "description", ""),
+                "hosted_url": _safe_get(inv, "hosted_invoice_url"),
+                "pdf_url": _safe_get(inv, "invoice_pdf"),
+                "created": _ts_to_datetime(_safe_get(inv, "created")),
+                "period_start": _ts_to_datetime(_safe_get(inv, "period_start")),
+                "period_end": _ts_to_datetime(_safe_get(inv, "period_end")),
+                "paid": _safe_get(inv, "paid") or False,
+                "attempt_count": _safe_get(inv, "attempt_count", 1),
+                "charge_id": _safe_get(charge_data, "id", ""),
+                "payment_method": _safe_get(
+                    _safe_get(charge_data, "payment_method_details", {}), "card", {}
+                ).get("last4", ""),
+                "card_brand": _safe_get(
+                    _safe_get(charge_data, "payment_method_details", {}), "card", {}
+                ).get("brand", ""),
+            }
+        )
+
+    return {
+        "transactions": transactions,
+        "has_more": invoices.has_more,
+        "currency": default_currency,
+    }

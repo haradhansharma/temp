@@ -1,0 +1,8 @@
+---
+import DashboardLayout from "@/layouts/DashboardLayout.astro";
+import ProfileCard from "@/components/vue/ProfileCard.vue";
+---
+
+<DashboardLayout title="Profile — SattaBase" description="View and edit your profile information.">
+  <ProfileCard client:only="vue" />
+</DashboardLayout>

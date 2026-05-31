@@ -1,0 +1,8 @@
+---
+import DashboardLayout from "@/layouts/DashboardLayout.astro";
+import SettingsPanel from "@/components/vue/SettingsPanel.vue";
+---
+
+<DashboardLayout title="Settings — SattaBase" description="Manage account security and preferences.">
+  <SettingsPanel client:only="vue" />
+</DashboardLayout>

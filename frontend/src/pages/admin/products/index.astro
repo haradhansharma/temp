@@ -1,0 +1,21 @@
+---
+/**
+ * Admin Products — /admin/products
+ *
+ * Product list management page.
+ * Mounts ProductsAdmin Vue component.
+ */
+import AdminLayout from "@/layouts/AdminLayout.astro";
+import ProductsAdmin from "@/components/admin/ProductsAdmin.vue";
+---
+
+<AdminLayout
+  title="Products — Admin — SattaBase"
+  description="Manage products, plans, and access entries."
+>
+  <ProductsAdmin client:only="vue" />
+</AdminLayout>
+
+<script>
+  import { useAdminGuard } from "@/composables/useAdminGuard";
+</script>

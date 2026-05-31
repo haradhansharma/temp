@@ -1,0 +1,21 @@
+---
+/**
+ * Admin Refunds — /admin/refunds
+ *
+ * Review and process refund requests with two-person approval workflow.
+ * Mounts RefundsAdmin Vue component.
+ */
+import AdminLayout from "@/layouts/AdminLayout.astro";
+import RefundsAdmin from "@/components/admin/RefundsAdmin.vue";
+---
+
+<AdminLayout
+  title="Refunds — Admin — SattaBase"
+  description="Review and process refund requests."
+>
+  <RefundsAdmin client:only="vue" />
+</AdminLayout>
+
+<script>
+  import { useAdminGuard } from "@/composables/useAdminGuard";
+</script>

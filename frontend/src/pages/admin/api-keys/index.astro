@@ -1,0 +1,21 @@
+---
+/**
+ * Admin API Keys — /admin/api-keys
+ *
+ * Manages service credentials for sister domain authentication.
+ * Migrated from /dashboard/admin/api-keys to the dedicated admin section.
+ */
+import AdminLayout from "@/layouts/AdminLayout.astro";
+import ApiKeysAdmin from "@/components/vue/ApiKeysAdmin.vue";
+---
+
+<AdminLayout
+  title="API Keys — Admin — SattaBase"
+  description="Manage service credentials for sister domain authentication."
+>
+  <ApiKeysAdmin client:only="vue" />
+</AdminLayout>
+
+<script>
+  import { useAdminGuard } from "@/composables/useAdminGuard";
+</script>

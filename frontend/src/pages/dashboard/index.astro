@@ -1,0 +1,8 @@
+---
+import DashboardLayout from "@/layouts/DashboardLayout.astro";
+import DashboardHome from "@/components/vue/DashboardHome.vue";
+---
+
+<DashboardLayout title="Dashboard — SattaBase" description="Your SattaBase dashboard overview.">
+  <DashboardHome client:only="vue" />
+</DashboardLayout>

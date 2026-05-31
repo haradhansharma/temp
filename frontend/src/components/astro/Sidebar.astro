@@ -1,0 +1,868 @@
+---
+interface NavItem {
+  label: string;
+  href: string;
+  icon: string;
+  disabled?: boolean;
+  badge?: string;
+  badgeColor?: "brand" | "muted" | "warning" | "destructive";
+  tooltip?: string;
+  external?: boolean;
+}
+
+interface NavSection {
+  title: string;
+  items: NavItem[];
+  collapsible?: boolean;
+}
+
+const mainNav: NavItem[] = [
+  { label: "Dashboard", href: "/dashboard", icon: "dashboard" },
+  { label: "Profile", href: "/dashboard/profile", icon: "user" },
+  { label: "Settings", href: "/dashboard/settings", icon: "settings" },
+];
+
+const billingNav: NavSection = {
+  title: "Billing",
+  items: [
+    { label: "Overview", href: "/dashboard/billing", icon: "billing" },
+    {
+      label: "Plans",
+      href: "/dashboard/billing/plans",
+      icon: "plans",
+      tooltip: "Compare plans and switch your subscription",
+    },
+    {
+      label: "Transactions",
+      href: "/dashboard/billing/transactions",
+      icon: "transactions",
+      tooltip: "View billing history and download invoices",
+    },
+    {
+      label: "Credits",
+      href: "/dashboard/billing/credits",
+      icon: "credits",
+      tooltip: "View your prepaid credit pools and invoices",
+    },
+  ],
+};
+
+const adminNav: NavSection = {
+  title: "Admin",
+  items: [
+    {
+      label: "Admin Panel",
+      href: "/admin",
+      icon: "api-keys",
+      tooltip: "Admin dashboard — products, subscriptions, users, API keys",
+    },
+    {
+          label: "Credits",
+          href: "/admin/credits",
+          icon: "credits",
+          tooltip: "Manage credit pools and invoices",
+        },
+        {
+          label: "Credit Requests",
+          href: "/admin/credit-requests",
+          icon: "credit-card",
+          tooltip: "Review and approve credit purchase requests",
+        },
+      ],
+    };
+
+const currentPath = Astro.url.pathname;
+---
+
+<div class="sidebar-root flex h-full flex-col relative">
+  <!-- Top accent gradient line -->
+  <div
+    class="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-brand-500 via-brand-400 to-emerald-400 dark:from-brand-600 dark:via-brand-500 dark:to-emerald-500 z-10"
+  >
+  </div>
+  <!-- Logo -->
+  <div class="flex h-16 items-center gap-3 px-6">
+    <div
+      class="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-600 text-white font-bold text-sm shadow-md shadow-brand-600/20"
+    >
+      S
+    </div>
+    <span class="text-lg font-bold tracking-tight">SattaBase</span>
+  </div>
+
+  <!-- Main Navigation -->
+  <nav
+    class="nav-scroll flex-1 space-y-1 overflow-y-auto px-3 py-4"
+    aria-label="Main navigation"
+  >
+    <!-- Section: General -->
+    <div class="nav-section" data-section="general">
+      <button
+        type="button"
+        class="section-header flex w-full items-center justify-between px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 hover:text-muted-foreground transition-colors"
+        aria-expanded="true"
+        data-section-toggle="general"
+      >
+        <span>General</span>
+        <svg
+          class="section-chevron h-3.5 w-3.5 transition-transform duration-200 rotate-0"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M19 9l-7 7-7-7"></path>
+        </svg>
+      </button>
+      <div class="section-items space-y-0.5 mt-1" data-section-items="general">
+        {
+          mainNav.map((item) => {
+            const isActive =
+              currentPath === item.href ||
+              (item.href !== "/dashboard" && currentPath.startsWith(item.href));
+            return (
+              <a
+                href={item.href}
+                class:list={[
+                  "nav-item group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
+                  isActive
+                    ? "bg-brand-50 text-brand-700 dark:bg-brand-950/60 dark:text-brand-400"
+                    : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                ]}
+                aria-current={isActive ? "page" : undefined}
+              >
+                {/* Active indicator */}
+                {isActive && (
+                  <span class="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-[3px] rounded-r-full bg-brand-600 dark:bg-brand-500" />
+                )}
+
+                {item.icon === "dashboard" && (
+                  <svg
+                    class="nav-icon h-5 w-5 shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="1.5"
+                      d="M4 5a1 1 0 011-1h4a1 1 0 011 1v5a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zM14 12a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1v-7z"
+                    />
+                  </svg>
+                )}
+                {item.icon === "user" && (
+                  <svg
+                    class="nav-icon h-5 w-5 shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="1.5"
+                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                    />
+                  </svg>
+                )}
+                {item.icon === "settings" && (
+                  <svg
+                    class="nav-icon h-5 w-5 shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="1.5"
+                      d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                    />
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="1.5"
+                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                  </svg>
+                )}
+                <span class="nav-label truncate">{item.label}</span>
+              </a>
+            );
+          })
+        }
+      </div>
+    </div>
+
+    <!-- Divider -->
+    <div class="my-3 border-t border-border"></div>
+
+    <!-- Section: Billing -->
+    <div class="nav-section" data-section="billing">
+      <button
+        type="button"
+        class="section-header flex w-full items-center justify-between px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 hover:text-muted-foreground transition-colors"
+        aria-expanded="true"
+        data-section-toggle="billing"
+      >
+        <span>{billingNav.title}</span>
+        <svg
+          class="section-chevron h-3.5 w-3.5 transition-transform duration-200 rotate-0"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M19 9l-7 7-7-7"></path>
+        </svg>
+      </button>
+      <div class="section-items space-y-0.5 mt-1" data-section-items="billing">
+        {
+          billingNav.items.map((item) => {
+            const isActive =
+              currentPath === item.href ||
+              (item.href !== "/dashboard/billing" &&
+                currentPath.startsWith(item.href));
+            return (
+              <a
+                href={item.disabled ? undefined : item.href}
+                class:list={[
+                  "nav-item group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
+                  item.disabled
+                    ? "cursor-not-allowed text-muted-foreground/40 hover:text-muted-foreground/60 hover:bg-muted/50"
+                    : isActive
+                      ? "bg-brand-50 text-brand-700 dark:bg-brand-950/60 dark:text-brand-400"
+                      : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                ]}
+                {...(item.disabled
+                  ? { "aria-disabled": "true", tabindex: "-1" }
+                  : {})}
+                aria-current={!item.disabled && isActive ? "page" : undefined}
+                {...(item.tooltip ? { "data-tooltip": item.tooltip } : {})}
+              >
+                {isActive && !item.disabled && (
+                  <span class="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-[3px] rounded-r-full bg-brand-600 dark:bg-brand-500" />
+                )}
+                {item.icon === "billing" && (
+                  <svg
+                    class="nav-icon h-5 w-5 shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="1.5"
+                      d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                    />
+                  </svg>
+                )}
+                {item.icon === "plans" && (
+                  <svg
+                    class="nav-icon h-5 w-5 shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="1.5"
+                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+                    />
+                  </svg>
+                )}
+                {item.icon === "transactions" && (
+                  <svg
+                    class="nav-icon h-5 w-5 shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="1.5"
+                      d="M9 5H7a2 2 0 00-2 2v8a2 2 0 002 2h14a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3"
+                    />
+                  </svg>
+                )}
+                <span class="nav-label truncate">{item.label}</span>
+
+                {/* Badge */}
+                {item.badge && (
+                  <span
+                    class:list={[
+                      "nav-badge ml-auto inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide shrink-0",
+                      item.badgeColor === "brand" &&
+                        "bg-brand-100 text-brand-700 dark:bg-brand-950 dark:text-brand-400",
+                      item.badgeColor === "muted" &&
+                        "bg-muted text-muted-foreground",
+                      item.badgeColor === "warning" &&
+                        "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400",
+                      item.badgeColor === "destructive" &&
+                        "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400",
+                      !item.badgeColor && "bg-muted text-muted-foreground",
+                    ]}
+                  >
+                    {item.badge}
+                  </span>
+                )}
+
+                {/* Disabled lock icon */}
+                {item.disabled && (
+                  <svg
+                    class="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/30"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                    />
+                  </svg>
+                )}
+              </a>
+            );
+          })
+        }
+      </div>
+    </div>
+
+    <!-- Divider -->
+    <div
+      class="my-3 border-t border-border"
+      data-admin-section
+      style="display:none"
+    >
+    </div>
+
+    <!-- Section: Admin (owner/admin only) -->
+    <div
+      class="nav-section"
+      data-section="admin"
+      data-admin-section
+      style="display:none"
+    >
+      <button
+        type="button"
+        class="section-header flex w-full items-center justify-between px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 hover:text-muted-foreground transition-colors"
+        aria-expanded="true"
+        data-section-toggle="admin"
+      >
+        <span>{adminNav.title}</span>
+        <svg
+          class="section-chevron h-3.5 w-3.5 transition-transform duration-200 rotate-0"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M19 9l-7 7-7-7"></path>
+        </svg>
+      </button>
+      <div class="section-items space-y-0.5 mt-1" data-section-items="admin">
+        {
+          adminNav.items.map((item) => {
+            const isActive =
+              currentPath === item.href ||
+              (item.href !== "/admin" && currentPath.startsWith(item.href));
+            return (
+              <a
+                href={item.href}
+                class:list={[
+                  "nav-item group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
+                  isActive
+                    ? "bg-brand-50 text-brand-700 dark:bg-brand-950/60 dark:text-brand-400"
+                    : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                ]}
+                aria-current={isActive ? "page" : undefined}
+                {...(item.tooltip ? { "data-tooltip": item.tooltip } : {})}
+              >
+                {isActive && (
+                  <span class="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-[3px] rounded-r-full bg-brand-600 dark:bg-brand-500" />
+                )}
+                {item.icon === "api-keys" && (
+                  <svg
+                    class="nav-icon h-5 w-5 shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="1.5"
+                      d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z"
+                    />
+                  </svg>
+                )}
+                <span class="nav-label truncate">{item.label}</span>
+              </a>
+            );
+          })
+        }
+      </div>
+    </div>
+  </nav>
+
+  <!-- Bottom section -->
+  <div class="border-t border-border bg-card">
+    <!-- Subscription status bar -->
+    <div id="sidebar-subscription-bar" class="px-4 py-2.5">
+      <div class="flex items-center gap-2.5 px-2">
+        <div
+          class="flex h-2 w-2 rounded-full bg-brand-500 shrink-0 animate-pulse"
+          id="sidebar-plan-dot"
+        >
+        </div>
+        <div class="flex-1 min-w-0">
+          <p
+            class="text-xs font-medium text-foreground truncate"
+            id="sidebar-plan-label"
+          >
+            Loading plan...
+          </p>
+        </div>
+        <a
+          href="/dashboard/billing"
+          class="text-[10px] font-semibold uppercase tracking-wide text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 transition-colors shrink-0"
+        >
+          Manage
+        </a>
+      </div>
+    </div>
+
+    <!-- User info -->
+    <div class="px-4 py-3">
+      <div
+        id="sidebar-user-info"
+        class="flex items-center gap-3 group cursor-pointer rounded-lg p-1 -mx-1 transition-colors hover:bg-accent"
+      >
+        <div
+          class="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-brand-700 text-white text-xs font-bold shrink-0 ring-2 ring-brand-200 dark:ring-brand-800 transition-transform group-hover:scale-105"
+        >
+          <span id="sidebar-user-avatar">?</span>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p
+            class="truncate text-sm font-medium leading-tight"
+            id="sidebar-user-name"
+          >
+            Loading...
+          </p>
+          <p
+            class="truncate text-[11px] text-muted-foreground mt-0.5"
+            id="sidebar-user-email"
+          >
+            ...
+          </p>
+        </div>
+        <svg
+          class="h-4 w-4 text-muted-foreground/40 group-hover:text-muted-foreground transition-colors shrink-0"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 5l7 7-7 7"></path>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Sign out -->
+    <button
+      type="button"
+      class="flex w-full items-center gap-3 px-6 py-2.5 text-sm font-medium text-muted-foreground/60 transition-all duration-200 hover:bg-destructive/5 hover:text-destructive border-t border-border"
+      id="sidebar-sign-out"
+      aria-label="Sign out"
+    >
+      <svg
+        class="h-4 w-4 shrink-0"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+        ></path>
+      </svg>
+      <span>Sign out</span>
+    </button>
+  </div>
+</div>
+
+<!-- Tooltip container (for disabled items) -->
+<div
+  id="sidebar-tooltip"
+  class="fixed z-[100] pointer-events-none px-3 py-1.5 rounded-lg bg-foreground text-background text-xs font-medium shadow-lg opacity-0 transition-opacity duration-150 max-w-[220px] text-center"
+  role="tooltip"
+>
+</div>
+
+<style>
+  /* Nav item icon hover micro-animation */
+  .nav-item:hover .nav-icon {
+    transform: scale(1.1);
+  }
+  .nav-icon {
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  /* Active nav item glow */
+  .nav-item[aria-current="page"] .nav-icon {
+    filter: drop-shadow(0 0 2px rgba(22, 163, 74, 0.3));
+  }
+  .dark .nav-item[aria-current="page"] .nav-icon {
+    filter: drop-shadow(0 0 2px rgba(34, 197, 94, 0.4));
+  }
+
+  /* Disabled items hide badge on hover to show lock icon cleanly */
+  .nav-item[aria-disabled="true"]:hover .nav-badge {
+    opacity: 0;
+  }
+
+  /* Custom thin scrollbar for nav */
+  .nav-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+  }
+  .nav-scroll:hover {
+    scrollbar-color: var(--color-muted-fg) transparent;
+  }
+  .nav-scroll::-webkit-scrollbar-thumb {
+    background: transparent;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+  .nav-scroll:hover::-webkit-scrollbar-thumb {
+    background: var(--color-muted-fg);
+  }
+
+  /* Section collapse animation */
+  .section-items {
+    transition:
+      max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+      opacity 0.25s ease,
+      margin-top 0.3s ease;
+  }
+  .section-items.collapsed {
+    max-height: 0 !important;
+    opacity: 0;
+    margin-top: 0 !important;
+    overflow: hidden;
+  }
+  .section-items.expanded {
+    max-height: 500px;
+    opacity: 1;
+  }
+</style>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    // ── Section collapse/expand ──
+    const sectionToggles = document.querySelectorAll("[data-section-toggle]");
+    sectionToggles.forEach((toggle) => {
+      toggle.addEventListener("click", () => {
+        const sectionKey = (toggle as HTMLElement).dataset.sectionToggle;
+        const items = document.querySelector(
+          `[data-section-items="${sectionKey}"]`,
+        ) as HTMLElement;
+        const chevron = toggle.querySelector(".section-chevron") as HTMLElement;
+        if (!items || !chevron) return;
+
+        const isExpanded = items.classList.contains("expanded");
+        if (isExpanded) {
+          items.classList.remove("expanded");
+          items.classList.add("collapsed");
+          chevron.style.transform = "rotate(-90deg)";
+          toggle.setAttribute("aria-expanded", "false");
+        } else {
+          items.classList.remove("collapsed");
+          items.classList.add("expanded");
+          chevron.style.transform = "rotate(0deg)";
+          toggle.setAttribute("aria-expanded", "true");
+        }
+      });
+    });
+
+    // Initialize: expanded sections
+    document.querySelectorAll("[data-section-items]").forEach((el) => {
+      const items = el as HTMLElement;
+      if (!items.classList.contains("collapsed")) {
+        items.classList.add("expanded");
+      }
+    });
+
+    // ── Tooltip for disabled items ──
+    const tooltip = document.getElementById("sidebar-tooltip") as HTMLElement;
+    const disabledItems = document.querySelectorAll(".nav-item[data-tooltip]");
+
+    disabledItems.forEach((item) => {
+      item.addEventListener("mouseenter", (e) => {
+        const tipText = (item as HTMLElement).dataset.tooltip;
+        if (!tipText || !tooltip) return;
+        tooltip.textContent = tipText;
+        tooltip.style.opacity = "1";
+        const rect = item.getBoundingClientRect();
+        const sidebarRect = item.closest("aside")?.getBoundingClientRect();
+        tooltip.style.left = `${(sidebarRect?.right ?? rect.right) + 8}px`;
+        tooltip.style.top = `${rect.top + rect.height / 2 - 14}px`;
+      });
+
+      item.addEventListener("mouseleave", () => {
+        if (tooltip) tooltip.style.opacity = "0";
+      });
+    });
+
+    // ── User info click → go to profile ──
+    const userInfo = document.getElementById("sidebar-user-info");
+    userInfo?.addEventListener("click", () => {
+      window.location.href = "/dashboard/profile";
+    });
+
+    // ── Sign out ──
+    const signOutBtn = document.getElementById("sidebar-sign-out");
+    signOutBtn?.addEventListener("click", async (e) => {
+      e.preventDefault();
+      try {
+        const { logout } = await import("@/lib/auth");
+        await logout();
+      } catch {
+        sessionStorage.removeItem("auth_access_token");
+        sessionStorage.removeItem("auth_refresh_token");
+        localStorage.removeItem("auth_access_token");
+        localStorage.removeItem("auth_refresh_token");
+        localStorage.removeItem("auth_remember_me");
+        window.location.href = "/auth/login";
+      }
+    });
+
+    // ── Keyboard navigation: arrow keys within nav ──
+    const nav = document.querySelector("[aria-label='Main navigation']");
+    if (nav) {
+      nav.addEventListener("keydown", (e) => {
+        const key = (e as KeyboardEvent).key;
+        const focusableItems = Array.from(
+          nav.querySelectorAll(
+            'a:not([tabindex="-1"]), button:not([disabled])',
+          ),
+        ) as HTMLElement[];
+        const currentIndex = focusableItems.indexOf(
+          document.activeElement as HTMLElement,
+        );
+
+        if (key === "ArrowDown") {
+          e.preventDefault();
+          const next = focusableItems[currentIndex + 1] || focusableItems[0];
+          next?.focus();
+        } else if (key === "ArrowUp") {
+          e.preventDefault();
+          const prev =
+            focusableItems[currentIndex - 1] ||
+            focusableItems[focusableItems.length - 1];
+          prev?.focus();
+        } else if (key === "Home") {
+          e.preventDefault();
+          focusableItems[0]?.focus();
+        } else if (key === "End") {
+          e.preventDefault();
+          focusableItems[focusableItems.length - 1]?.focus();
+        }
+      });
+    }
+
+    // ── Role-based admin section visibility ──
+    // Fetches user profile and shows the Admin nav section for owner/admin roles.
+    // The section is hidden by default (style="display:none") and only revealed
+    // if the authenticated user has an admin role or is_staff (superuser).
+    async function checkAdminVisibility() {
+      try {
+        const { apiClient } = await import("@/lib/api");
+        const user = await apiClient.get<{ role: string; is_staff: boolean }>(
+          "/users/me",
+        );
+        const isAdmin =
+          user.is_staff === true ||
+          user.role === "owner" ||
+          user.role === "admin";
+        const adminElements = document.querySelectorAll("[data-admin-section]");
+        adminElements.forEach((el) => {
+          (el as HTMLElement).style.display = isAdmin ? "" : "none";
+        });
+        // Also initialize section collapse for the admin section if visible
+        if (isAdmin) {
+          const adminItems = document.querySelector(
+            "[data-section-items='admin']",
+          ) as HTMLElement;
+          if (adminItems && !adminItems.classList.contains("expanded")) {
+            adminItems.classList.add("expanded");
+          }
+        }
+      } catch {
+        // User not authenticated or fetch failed — keep admin section hidden
+        const adminElements = document.querySelectorAll("[data-admin-section]");
+        adminElements.forEach((el) => {
+          (el as HTMLElement).style.display = "none";
+        });
+      }
+    }
+    checkAdminVisibility();
+    // Re-check on page transitions since the sidebar may be re-rendered (mobile)
+    document.addEventListener("astro:page-load", checkAdminVisibility);
+
+    // ── Load subscription plan info ──
+    async function loadPlanInfo() {
+      const planLabel = document.getElementById("sidebar-plan-label");
+      const planDot = document.getElementById("sidebar-plan-dot");
+      if (!planLabel) return;
+
+      try {
+        const { apiClient } = await import("@/lib/api");
+        const data = await apiClient.get<{ items: any[] }>(
+          "/billing/subscriptions",
+        );
+        const subs = data?.items || [];
+        const activeSub =
+          subs.find(
+            (s: any) => s.status === "active" || s.status === "trialing",
+          ) || null;
+        if (activeSub) {
+          planLabel.textContent = activeSub.plan_name;
+          if (planDot) {
+            if (activeSub.status === "active") {
+              planDot.className =
+                "flex h-2 w-2 rounded-full bg-brand-500 shrink-0";
+            } else if (activeSub.status === "trialing") {
+              planDot.className =
+                "flex h-2 w-2 rounded-full bg-blue-500 shrink-0 animate-pulse";
+            } else if (activeSub.status === "past_due") {
+              planDot.className =
+                "flex h-2 w-2 rounded-full bg-amber-500 shrink-0 animate-pulse";
+            }
+          }
+        } else {
+          planLabel.textContent = "Free Plan";
+          if (planDot) {
+            planDot.className =
+              "flex h-2 w-2 rounded-full bg-muted-foreground/40 shrink-0";
+          }
+        }
+      } catch {
+        planLabel.textContent = "Free Plan";
+        const dot = document.getElementById("sidebar-plan-dot");
+        if (dot) {
+          dot.className =
+            "flex h-2 w-2 rounded-full bg-muted-foreground/40 shrink-0";
+        }
+      }
+    }
+
+    // ── Active nav highlight (client-side, works with transition:persist) ──
+    // transition:persist freezes the sidebar, so Astro.url.pathname only runs once.
+    // This script re-evaluates active state on every Astro View Transition navigation.
+    function updateActiveNav() {
+      const currentPath = window.location.pathname;
+      document.querySelectorAll(".nav-item").forEach((item) => {
+        const href = (item as HTMLAnchorElement).getAttribute("href");
+        if (!href) return;
+
+        // Dashboard root: exact match only
+        if (href === "/dashboard") {
+          item.classList.toggle(
+            "bg-brand-50",
+            currentPath === "/dashboard" || currentPath === "/dashboard/",
+          );
+          item.classList.toggle(
+            "text-brand-700",
+            currentPath === "/dashboard" || currentPath === "/dashboard/",
+          );
+          item.classList.toggle(
+            "dark:bg-brand-950/60",
+            currentPath === "/dashboard" || currentPath === "/dashboard/",
+          );
+          item.classList.toggle(
+            "dark:text-brand-400",
+            currentPath === "/dashboard" || currentPath === "/dashboard/",
+          );
+          item.classList.toggle(
+            "text-muted-foreground",
+            currentPath !== "/dashboard" && currentPath !== "/dashboard/",
+          );
+          item.setAttribute(
+            "aria-current",
+            currentPath === "/dashboard" || currentPath === "/dashboard/"
+              ? "page"
+              : undefined,
+          );
+          return;
+        }
+
+        // Billing overview: exact match only (children should not activate it)
+        if (href === "/dashboard/billing") {
+          const isOverview =
+            currentPath === "/dashboard/billing" ||
+            currentPath === "/dashboard/billing/";
+          item.classList.toggle("bg-brand-50", isOverview);
+          item.classList.toggle("text-brand-700", isOverview);
+          item.classList.toggle("dark:bg-brand-950/60", isOverview);
+          item.classList.toggle("dark:text-brand-400", isOverview);
+          item.classList.toggle("text-muted-foreground", !isOverview);
+          item.setAttribute("aria-current", isOverview ? "page" : undefined);
+          return;
+        }
+
+        // All other nav items: exact or prefix match
+        const isActive =
+          currentPath === href || currentPath.startsWith(href + "/");
+        item.classList.toggle("bg-brand-50", isActive);
+        item.classList.toggle("text-brand-700", isActive);
+        item.classList.toggle("dark:bg-brand-950/60", isActive);
+        item.classList.toggle("dark:text-brand-400", isActive);
+        item.classList.toggle("text-muted-foreground", !isActive);
+        item.setAttribute("aria-current", isActive ? "page" : undefined);
+      });
+
+      // Update active indicator bars
+      document.querySelectorAll(".nav-item").forEach((item) => {
+        const isActive = item.getAttribute("aria-current") === "page";
+        let indicator = item.querySelector(
+          ".active-indicator-bar",
+        ) as HTMLElement | null;
+        if (isActive && !indicator) {
+          indicator = document.createElement("span");
+          indicator.className =
+            "active-indicator-bar absolute left-0 top-1/2 -translate-y-1/2 h-6 w-[3px] rounded-r-full bg-brand-600 dark:bg-brand-500";
+          item.appendChild(indicator);
+        } else if (!isActive && indicator) {
+          indicator.remove();
+        }
+      });
+    }
+
+    // Run on initial load and on every Astro View Transition
+    updateActiveNav();
+    document.addEventListener("astro:page-load", updateActiveNav);
+    document.addEventListener("astro:after-swap", updateActiveNav);
+  });
+</script>

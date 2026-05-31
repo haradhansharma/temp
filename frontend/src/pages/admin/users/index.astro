@@ -1,0 +1,21 @@
+---
+/**
+ * Admin Users — /admin/users
+ *
+ * User list management page.
+ * Mounts UsersAdmin Vue component.
+ */
+import AdminLayout from "@/layouts/AdminLayout.astro";
+import UsersAdmin from "@/components/admin/UsersAdmin.vue";
+---
+
+<AdminLayout
+  title="Users — Admin — SattaBase"
+  description="Search users, view profiles, and manage roles."
+>
+  <UsersAdmin client:only="vue" />
+</AdminLayout>
+
+<script>
+  import { useAdminGuard } from "@/composables/useAdminGuard";
+</script>

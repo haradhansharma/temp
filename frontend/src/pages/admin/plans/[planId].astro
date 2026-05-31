@@ -1,0 +1,32 @@
+---
+/**
+ * Admin Plan Detail — /admin/plans/:planId
+ *
+ * Plan detail with access entries editor.
+ * Mounts PlanDetailAdmin Vue component with planId prop.
+ */
+import AdminLayout from "@/layouts/AdminLayout.astro";
+import PlanDetailAdmin from "@/components/admin/PlanDetailAdmin.vue";
+
+export function getStaticPaths() {
+  return []; // Dynamic server rendering
+}
+
+const { planId } = Astro.params;
+const id = Number(planId);
+
+if (!id || isNaN(id)) {
+  return Astro.redirect("/admin/products");
+}
+---
+
+<AdminLayout
+  title="Plan Detail — Admin — SattaBase"
+  description="Plan detail and access entries."
+>
+  <PlanDetailAdmin client:only="vue" :planId={id} />
+</AdminLayout>
+
+<script>
+  import { useAdminGuard } from "@/composables/useAdminGuard";
+</script>

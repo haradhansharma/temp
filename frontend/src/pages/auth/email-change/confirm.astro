@@ -1,0 +1,11 @@
+---
+import AuthLayout from "@/layouts/AuthLayout.astro";
+import EmailChangeConfirm from "@/components/vue/EmailChangeConfirm.vue";
+
+// Token can come from ?token= UUID query param
+const token = Astro.url.searchParams.get("token") || undefined;
+---
+
+<AuthLayout title="Confirm Email Change — SattaBase" description="Confirm your email change with the token sent to your email.">
+  <EmailChangeConfirm client:only="vue" token={token} />
+</AuthLayout>

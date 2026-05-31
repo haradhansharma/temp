@@ -1,0 +1,428 @@
+---
+/**
+ * AdminNavbar — Top navigation bar for the /admin/* section.
+ *
+ * Follows the same pattern as Navbar.astro but with admin-specific elements:
+ *   - "Sattabase Admin" breadcrumb
+ *   - Staff badge indicator
+ *   - Link to user-facing dashboard
+ *   - Link to Django admin
+ *   - Dark mode toggle
+ *   - User menu with sign out
+ */
+---
+
+<header class="z-40 bg-card/80 backdrop-blur-md">
+  <div class="flex h-16 items-center justify-between px-4 md:px-6">
+    <!-- Left: Mobile menu + Breadcrumb -->
+    <div class="flex items-center gap-4">
+      <!-- Mobile menu button -->
+      <button
+        type="button"
+        class="lg:hidden inline-flex items-center justify-center rounded-lg p-2 text-muted-foreground hover:bg-accent hover:text-foreground focus-ring transition-colors"
+        id="admin-mobile-menu-toggle"
+        aria-label="Toggle admin sidebar menu"
+        aria-expanded="false"
+      >
+        <svg
+          class="h-5 w-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M4 6h16M4 12h16M4 18h16"></path>
+        </svg>
+      </button>
+
+      <!-- Mobile logo -->
+      <div class="flex items-center gap-2 lg:hidden">
+        <div
+          class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-600 text-white font-bold text-xs shadow-sm"
+        >
+          A
+        </div>
+        <span class="font-semibold text-sm">Admin</span>
+      </div>
+
+      <!-- Desktop breadcrumb -->
+      <nav class="hidden lg:block" aria-label="Admin breadcrumb">
+        <ol class="flex items-center gap-1.5 text-sm text-muted-foreground">
+          <li class="flex items-center gap-1.5">
+            <a
+              href="/admin"
+              class="transition-colors hover:text-foreground font-medium text-amber-600 dark:text-amber-400"
+              >Admin</a
+            >
+          </li>
+        </ol>
+      </nav>
+    </div>
+
+    <!-- Right: Actions -->
+    <div class="flex items-center gap-2">
+      <!-- Back to dashboard link -->
+      <a
+        href="/dashboard"
+        class="hidden sm:inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+        title="Back to user dashboard"
+      >
+        <svg
+          class="h-4 w-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M11 17l-5-5m0 0l5-5m-5 5h12"></path>
+        </svg>
+        <span class="hidden md:inline">Dashboard</span>
+      </a>
+
+      <!-- Django admin link -->
+      <a
+        href="/admin/django/"
+        class="hidden sm:inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-muted-foreground/60 hover:bg-accent hover:text-foreground transition-colors"
+        target="_blank"
+        rel="noopener noreferrer"
+        title="Django Admin"
+      >
+        <svg
+          class="h-4 w-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+          ></path>
+        </svg>
+        <span class="hidden md:inline">Django</span>
+      </a>
+
+      <!-- Divider -->
+      <div class="hidden h-6 w-px bg-border sm:block"></div>
+
+      <!-- Dark mode toggle -->
+      <button
+        type="button"
+        class="inline-flex items-center justify-center rounded-lg p-2 text-muted-foreground hover:bg-accent hover:text-foreground focus-ring transition-colors"
+        id="admin-dark-mode-toggle"
+        aria-label="Toggle dark mode"
+      >
+        <!-- Sun icon (shown in dark mode) -->
+        <svg
+          class="h-5 w-5 hidden dark:block"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
+          ></path>
+        </svg>
+        <!-- Moon icon (shown in light mode) -->
+        <svg
+          class="h-5 w-5 block dark:hidden"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
+          ></path>
+        </svg>
+      </button>
+
+      <!-- Divider -->
+      <div class="hidden h-6 w-px bg-border sm:block"></div>
+
+      <!-- User dropdown -->
+      <div class="relative" id="admin-user-dropdown-wrapper">
+        <button
+          type="button"
+          class="flex items-center gap-2 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-accent focus-ring"
+          id="admin-user-menu-toggle"
+          aria-label="Admin user menu"
+          aria-expanded="false"
+        >
+          <div
+            class="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-amber-500 to-amber-700 text-white text-xs font-bold"
+          >
+            ?
+          </div>
+          <div class="hidden md:block">
+            <span
+              class="text-sm font-medium truncate max-w-32 block"
+              id="admin-navbar-user-name">Loading...</span
+            >
+            <span
+              class="text-[10px] font-semibold uppercase tracking-wide text-amber-600 dark:text-amber-400"
+              id="admin-navbar-user-role">Staff</span
+            >
+          </div>
+          <!-- Chevron -->
+          <svg
+            class="hidden md:block h-4 w-4 text-muted-foreground"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M19 9l-7 7-7-7"></path>
+          </svg>
+        </button>
+
+        <!-- User dropdown menu -->
+        <div
+          class="hidden absolute right-0 top-full mt-2 w-56 rounded-xl border border-border bg-card shadow-lg animate-scale-in origin-top-right"
+          id="admin-user-dropdown"
+          role="menu"
+        >
+          <div class="px-4 py-3 border-b border-border">
+            <p
+              class="text-sm font-medium truncate"
+              id="admin-user-dropdown-name"
+            >
+              Loading...
+            </p>
+            <p class="flex items-center gap-2 mt-0.5">
+              <span
+                class="text-xs text-muted-foreground truncate"
+                id="admin-user-dropdown-email">...</span
+              >
+              <span
+                class="ml-auto inline-flex items-center rounded-md border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-400"
+                id="admin-dropdown-role-badge"
+              >
+                Staff
+              </span>
+            </p>
+          </div>
+          <div class="py-1">
+            <a
+              href="/dashboard"
+              class="flex items-center gap-3 px-4 py-2.5 text-sm text-foreground transition-colors hover:bg-accent"
+              role="menuitem"
+            >
+              <svg
+                class="h-4 w-4 text-muted-foreground"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M11 17l-5-5m0 0l5-5m-5 5h12"></path>
+              </svg>
+              User Dashboard
+            </a>
+            <a
+              href="/admin/django/"
+              class="flex items-center gap-3 px-4 py-2.5 text-sm text-foreground transition-colors hover:bg-accent"
+              role="menuitem"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <svg
+                class="h-4 w-4 text-muted-foreground"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                ></path>
+              </svg>
+              Django Admin
+            </a>
+          </div>
+          <div class="border-t border-border py-1">
+            <button
+              type="button"
+              class="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-destructive transition-colors hover:bg-destructive/10"
+              role="menuitem"
+              id="admin-navbar-sign-out"
+            >
+              <svg
+                class="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                ></path>
+              </svg>
+              Sign out
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const mobileMenuToggle = document.getElementById(
+      "admin-mobile-menu-toggle",
+    );
+    const darkModeToggle = document.getElementById("admin-dark-mode-toggle");
+    const userMenuToggle = document.getElementById("admin-user-menu-toggle");
+    const userDropdown = document.getElementById("admin-user-dropdown");
+    const signOutBtn = document.getElementById("admin-navbar-sign-out");
+
+    // ── Mobile sidebar toggle → dispatch custom event ──
+    mobileMenuToggle?.addEventListener("click", () => {
+      document.dispatchEvent(
+        new CustomEvent("toggle-admin-mobile-sidebar", {
+          detail: { open: true },
+        }),
+      );
+      mobileMenuToggle.setAttribute("aria-expanded", "true");
+    });
+
+    // ── Dark mode toggle ──
+    darkModeToggle?.addEventListener("click", () => {
+      const html = document.documentElement;
+      const isDark = html.classList.toggle("dark");
+      localStorage.setItem("theme", isDark ? "dark" : "light");
+
+      const meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) {
+        meta.setAttribute("content", isDark ? "#0a0a0a" : "#d97706");
+      }
+    });
+
+    // ── User dropdown toggle ──
+    userMenuToggle?.addEventListener("click", () => {
+      const isHidden = userDropdown?.classList.contains("hidden");
+      closeDropdown();
+      if (isHidden) {
+        userDropdown?.classList.remove("hidden");
+        userMenuToggle.setAttribute("aria-expanded", "true");
+      } else {
+        userMenuToggle.setAttribute("aria-expanded", "false");
+      }
+    });
+
+    // ── Sign out ──
+    signOutBtn?.addEventListener("click", async () => {
+      try {
+        const { logout } = await import("@/lib/auth");
+        await logout();
+      } catch {
+        sessionStorage.removeItem("auth_access_token");
+        sessionStorage.removeItem("auth_refresh_token");
+        localStorage.removeItem("auth_access_token");
+        localStorage.removeItem("auth_refresh_token");
+        localStorage.removeItem("auth_remember_me");
+        window.location.href = "/auth/login";
+      }
+    });
+
+    // ── Close dropdown on outside click ──
+    document.addEventListener("click", (e) => {
+      const target = e.target as HTMLElement;
+      const wrapper = document.getElementById("admin-user-dropdown-wrapper");
+      if (wrapper && !wrapper.contains(target)) {
+        closeDropdown();
+      }
+    });
+
+    // ── Close dropdown on Escape ──
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeDropdown();
+    });
+
+    function closeDropdown() {
+      userDropdown?.classList.add("hidden");
+      userMenuToggle?.setAttribute("aria-expanded", "false");
+    }
+
+    // ── Populate user info ──
+    async function populateAdminUserInfo() {
+      try {
+        const { apiClient } = await import("@/lib/api");
+        const user = await apiClient.get<{
+          display_name?: string;
+          email: string;
+          role: string;
+          is_staff: boolean;
+        }>("/users/me");
+        const displayName = user.display_name || user.email;
+        const roleLabel = user.is_staff
+          ? "Super Admin"
+          : user.role === "owner"
+            ? "Owner"
+            : user.role === "admin"
+              ? "Admin"
+              : "Staff";
+
+        const initials = displayName
+          .split(" ")
+          .map((n: string) => n[0])
+          .join("")
+          .slice(0, 2)
+          .toUpperCase();
+
+        // Update all name/role/avatar elements
+        const nameEls = [
+          document.getElementById("admin-navbar-user-name"),
+          document.getElementById("admin-user-dropdown-name"),
+        ];
+        nameEls.forEach((el) => {
+          if (el) el.textContent = displayName;
+        });
+
+        const emailEl = document.getElementById("admin-user-dropdown-email");
+        if (emailEl) emailEl.textContent = user.email;
+
+        const roleEls = [
+          document.getElementById("admin-navbar-user-role"),
+          document.getElementById("admin-dropdown-role-badge"),
+        ];
+        roleEls.forEach((el) => {
+          if (el) el.textContent = roleLabel;
+        });
+
+        // Update avatar initials in dropdown
+        const avatarEl = document.querySelector(
+          "#admin-user-menu-toggle .rounded-full",
+        );
+        if (avatarEl) avatarEl.textContent = initials;
+      } catch {
+        // Not authenticated — will redirect via middleware
+      }
+    }
+
+    populateAdminUserInfo();
+  });
+</script>

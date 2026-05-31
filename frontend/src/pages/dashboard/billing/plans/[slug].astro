@@ -1,0 +1,10 @@
+---
+import DashboardLayout from "@/layouts/DashboardLayout.astro";
+import PlanComparison from "@/components/vue/PlanComparison.vue";
+
+const { slug } = Astro.params;
+---
+
+<DashboardLayout title={`Plans — SattaBase`} description="Compare plans and manage your subscription.">
+  <PlanComparison client:only="vue" slug={slug} />
+</DashboardLayout>

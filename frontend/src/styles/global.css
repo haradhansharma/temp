@@ -1,0 +1,353 @@
+@import "tailwindcss";
+
+/* ============================================================================
+   Tailwind v4 — Theme (replaces tailwind.config.js)
+   ============================================================================ */
+
+@theme {
+  /* Brand palette */
+  --color-brand-50: #f0fdf4;
+  --color-brand-100: #dcfce7;
+  --color-brand-200: #bbf7d0;
+  --color-brand-300: #86efac;
+  --color-brand-400: #4ade80;
+  --color-brand-500: #22c55e;
+  --color-brand-600: #16a34a;
+  --color-brand-700: #15803d;
+  --color-brand-800: #166534;
+  --color-brand-900: #14532d;
+  --color-brand-950: #052e16;
+
+  /* Design tokens — mapped from CSS variables so utilities like bg-background work */
+  --color-background: var(--color-bg);
+  --color-foreground: var(--color-fg);
+  --color-card: var(--color-card);
+  --color-card-foreground: var(--color-card-fg);
+  --color-muted: var(--color-muted);
+  --color-muted-foreground: var(--color-muted-fg);
+  --color-border: var(--color-border-val);
+  --color-input: var(--color-input-val);
+  --color-primary: var(--color-primary-val);
+  --color-primary-foreground: var(--color-primary-fg);
+  --color-secondary: var(--color-secondary-val);
+  --color-secondary-foreground: var(--color-secondary-fg);
+  --color-accent: var(--color-accent-val);
+  --color-accent-foreground: var(--color-accent-fg);
+  --color-destructive: var(--color-destructive-val);
+  --color-destructive-foreground: var(--color-destructive-fg);
+  --color-ring: var(--color-ring-val);
+
+  /* Radius */
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  /* Fonts */
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+
+  /* Font size tokens for consistent typography */
+  --text-2xs: 0.625rem;
+  --text-2xs--line-height: 0.875rem;
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1rem;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.25rem;
+  --text-base: 1rem;
+  --text-base--line-height: 1.5rem;
+  --text-lg: 1.125rem;
+  --text-lg--line-height: 1.75rem;
+  --text-xl: 1.25rem;
+  --text-xl--line-height: 1.75rem;
+  --text-2xl: 1.5rem;
+  --text-2xl--line-height: 2rem;
+  --text-3xl: 1.875rem;
+  --text-3xl--line-height: 2.25rem;
+  --text-4xl: 2.25rem;
+  --text-4xl--line-height: 2.5rem;
+}
+
+/* ============================================================================
+   Custom dark variant (class-based)
+   ============================================================================ */
+
+@custom-variant dark (&:is(.dark *));
+
+/* ============================================================================
+   CSS Variables — Light & Dark themes (using unique internal names)
+   ============================================================================ */
+
+:root {
+  --radius: 0.5rem;
+  --color-bg: #ffffff;
+  --color-fg: #0a0a0a;
+  --color-card: #ffffff;
+  --color-card-fg: #0a0a0a;
+  --color-muted: #f5f5f5;
+  --color-muted-fg: #737373;
+  --color-border-val: #e5e5e5;
+  --color-input-val: #e5e5e5;
+  --color-primary-val: #16a34a;
+  --color-primary-fg: #ffffff;
+  --color-secondary-val: #f5f5f5;
+  --color-secondary-fg: #171717;
+  --color-accent-val: #f5f5f5;
+  --color-accent-fg: #171717;
+  --color-destructive-val: #dc2626;
+  --color-destructive-fg: #ffffff;
+  --color-ring-val: #16a34a;
+}
+
+.dark {
+  --color-bg: #0a0a0a;
+  --color-fg: #fafafa;
+  --color-card: #171717;
+  --color-card-fg: #fafafa;
+  --color-muted: #262626;
+  --color-muted-fg: #a3a3a3;
+  --color-border-val: #262626;
+  --color-input-val: #262626;
+  --color-primary-val: #22c55e;
+  --color-primary-fg: #0a0a0a;
+  --color-secondary-val: #262626;
+  --color-secondary-fg: #fafafa;
+  --color-accent-val: #262626;
+  --color-accent-fg: #fafafa;
+  --color-destructive-val: #ef4444;
+  --color-destructive-fg: #ffffff;
+  --color-ring-val: #22c55e;
+}
+
+/* ============================================================================
+   Base styles
+   ============================================================================ */
+
+@layer base {
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-sans);
+  }
+}
+
+/* ============================================================================
+   Utility classes
+   ============================================================================ */
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-secondary px-4 py-2.5 text-sm font-medium text-secondary-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  .btn-destructive {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-destructive px-4 py-2.5 text-sm font-medium text-destructive-foreground transition-colors hover:bg-destructive/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  .input-field {
+    @apply flex h-10 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .card {
+    @apply rounded-xl border border-border bg-card shadow-sm;
+  }
+
+  .label-text {
+    @apply text-sm font-medium leading-none text-foreground;
+  }
+
+  /* ── Smooth theme transition (for dark mode toggle) ── */
+  .transition-theme,
+  .transition-theme * {
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.15s ease !important;
+  }
+
+  /* ── Focus-visible ring utility ── */
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+  }
+
+  /* ── Glassmorphism utility ── */
+  .glass {
+    @apply border border-white/20 bg-white/10 backdrop-blur-xl shadow-lg;
+  }
+
+  .dark .glass {
+    @apply border-white/10 bg-white/5;
+  }
+
+  /* ── Gradient brand utility ── */
+  .gradient-brand {
+    background: linear-gradient(135deg, var(--color-brand-500) 0%, var(--color-brand-600) 50%, var(--color-brand-700) 100%);
+  }
+
+  .gradient-brand-subtle {
+    background: linear-gradient(135deg, var(--color-brand-50) 0%, var(--color-brand-100) 100%);
+  }
+
+  .dark .gradient-brand-subtle {
+    background: linear-gradient(135deg, var(--color-brand-950) 0%, var(--color-brand-900) 100%);
+  }
+
+  /* ── Skeleton loading placeholder ── */
+  .skeleton {
+    @apply relative overflow-hidden rounded-md bg-muted;
+  }
+
+  .skeleton::after {
+    content: "";
+    display: block;
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.15) 50%,
+      transparent 100%
+    );
+    animation: skeleton-shimmer 1.8s ease-in-out infinite;
+  }
+
+  .dark .skeleton::after {
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.06) 50%,
+      transparent 100%
+    );
+  }
+}
+
+/* ============================================================================
+   Keyframe animations
+   ============================================================================ */
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes slide-in {
+  from {
+    transform: translateY(-1rem);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Animation utility classes */
+@layer utilities {
+  .animate-fade-in {
+    animation: fade-in 0.3s ease-out;
+  }
+
+  .animate-slide-up {
+    animation: slide-up 0.35s ease-out;
+  }
+
+  .animate-scale-in {
+    animation: scale-in 0.2s ease-out;
+  }
+}
+
+/* ============================================================================
+   Toast animation
+   ============================================================================ */
+
+.toast-enter {
+  animation: slide-in 0.2s ease-out;
+}
+
+/* ============================================================================
+   Custom scrollbar
+   ============================================================================ */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-muted-fg);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-fg);
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(163, 163, 163, 0.4);
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(163, 163, 163, 0.6);
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-muted-fg) transparent;
+}
+
+.dark * {
+  scrollbar-color: rgba(163, 163, 163, 0.4) transparent;
+}

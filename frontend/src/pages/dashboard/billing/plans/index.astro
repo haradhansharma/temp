@@ -1,0 +1,8 @@
+---
+import DashboardLayout from "@/layouts/DashboardLayout.astro";
+import PlansLanding from "@/components/vue/PlansLanding.vue";
+---
+
+<DashboardLayout title="Plans & Pricing — SattaBase" description="Browse plans across all available products.">
+  <PlansLanding client:only="vue" />
+</DashboardLayout>

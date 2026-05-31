@@ -1,0 +1,8 @@
+---
+import DashboardLayout from "@/layouts/DashboardLayout.astro";
+import BillingOverview from "@/components/vue/BillingOverview.vue";
+---
+
+<DashboardLayout title="Billing & Subscriptions — SattaBase" description="Manage your subscriptions and view plans.">
+  <BillingOverview client:only="vue" />
+</DashboardLayout>

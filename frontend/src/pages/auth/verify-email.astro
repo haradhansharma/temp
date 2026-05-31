@@ -1,0 +1,11 @@
+---
+import AuthLayout from "@/layouts/AuthLayout.astro";
+import VerifyEmailForm from "@/components/vue/VerifyEmailForm.vue";
+
+// Email can come from ?email= query param (after registration redirect)
+const email = Astro.url.searchParams.get("email") || undefined;
+---
+
+<AuthLayout title="Verify Email — SattaBase" description="Verify your email address to activate your account.">
+  <VerifyEmailForm client:only="vue" email={email} />
+</AuthLayout>

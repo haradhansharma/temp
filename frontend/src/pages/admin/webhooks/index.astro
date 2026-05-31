@@ -1,0 +1,21 @@
+---
+/**
+ * Admin Webhooks — /admin/webhooks
+ *
+ * Monitor and retry Stripe webhook delivery events.
+ * Mounts WebhooksAdmin Vue component.
+ */
+import AdminLayout from "@/layouts/AdminLayout.astro";
+import WebhooksAdmin from "@/components/admin/WebhooksAdmin.vue";
+---
+
+<AdminLayout
+  title="Webhooks — Admin — SattaBase"
+  description="Monitor and retry webhook delivery events."
+>
+  <WebhooksAdmin client:only="vue" />
+</AdminLayout>
+
+<script>
+  import { useAdminGuard } from "@/composables/useAdminGuard";
+</script>

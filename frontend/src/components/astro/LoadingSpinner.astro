@@ -1,0 +1,55 @@
+---
+interface Props {
+  size?: "sm" | "md" | "lg";
+  variant?: "brand" | "muted";
+  message?: string;
+}
+
+const {
+  size = "md",
+  variant = "brand",
+  message = "Loading...",
+} = Astro.props;
+
+const sizeMap = {
+  sm: { container: "h-6 w-6", border: "border-2", track: "h-6 w-6", text: "text-xs" },
+  md: { container: "h-10 w-10", border: "border-2", track: "h-10 w-10", text: "text-sm" },
+  lg: { container: "h-14 w-14", border: "border-[3px]", track: "h-14 w-14", text: "text-base" },
+};
+
+const variantMap = {
+  brand: {
+    track: "border-brand-500",
+    gradient: "conic-gradient(from 0deg, #22c55e, #16a34a, #052e16, #16a34a, #22c55e)",
+    mask: "border-t-transparent",
+  },
+  muted: {
+    track: "border-muted-foreground/50",
+    gradient: "conic-gradient(from 0deg, #737373, #525252, #262626, #525252, #737373)",
+    mask: "border-t-transparent",
+  },
+};
+
+const s = sizeMap[size];
+const v = variantMap[variant];
+---
+
+<div class="flex flex-col items-center justify-center gap-3 py-16" id="loading-state">
+  <div class={`relative ${s.container}`}>
+    <!-- Track background -->
+    <div class={`absolute inset-0 rounded-full ${s.border} border-border`}></div>
+    <!-- Spinning gradient ring -->
+    <div
+      class:list={[
+        "absolute inset-0 rounded-full animate-spin",
+        s.border,
+        v.mask,
+      ]}
+      style={`border-color: transparent; border-top-color: ${variant === "brand" ? "var(--color-brand-500)" : "var(--color-muted-fg)"};`}
+    >
+    </div>
+  </div>
+  {message && (
+    <p class={`${s.text} text-muted-foreground`}>{message}</p>
+  )}
+</div>

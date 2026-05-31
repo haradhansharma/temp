@@ -1,0 +1,33 @@
+---
+/**
+ * Admin Subscription Detail — /admin/subscriptions/:id
+ *
+ * Subscription detail with overview, plan changes, invoices, and refunds.
+ * Mounts SubscriptionDetailAdmin Vue component.
+ *
+ * The Vue component reads the subscription ID from the URL path directly,
+ * which is more reliable with Astro ClientRouter (View Transitions)
+ * than passing it as a prop via client:only.  The prop is kept as a
+ * secondary fallback for direct full-page loads.
+ */
+import AdminLayout from "@/layouts/AdminLayout.astro";
+import SubscriptionDetailAdmin from "@/components/admin/SubscriptionDetailAdmin.vue";
+
+const { id } = Astro.params;
+const subscriptionId = Number(id);
+
+if (!subscriptionId || isNaN(subscriptionId)) {
+  return Astro.redirect("/admin/subscriptions");
+}
+---
+
+<AdminLayout
+  title="Subscription Detail — Admin — SattaBase"
+  description="Subscription detail, plan changes, invoices, and refunds."
+>
+  <SubscriptionDetailAdmin client:only="vue" :subscriptionId={subscriptionId} />
+</AdminLayout>
+
+<script>
+  import { useAdminGuard } from "@/composables/useAdminGuard";
+</script>

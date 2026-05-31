@@ -1,0 +1,710 @@
+---
+/**
+ * AdminSidebar — Navigation sidebar for the /admin/* section.
+ *
+ * Follows the same pattern as Sidebar.astro but with admin-specific nav items:
+ *   - Dashboard (overview / metrics)
+ *   - Products (product + plan + domain + access-entry management)
+ *   - Subscriptions (global subscription management)
+ *   - Users (user management + audit)
+ *   - Refunds (refund approval / rejection)
+ *   - API Keys (service credential management)
+ *   - Webhooks (webhook event log)
+ *   - Audit Log (admin action trail)
+ *
+ * Active state is tracked client-side via updateActiveNav() since this
+ * component is persisted across navigations via transition:persist.
+ */
+
+interface NavItem {
+  label: string;
+  href: string;
+  icon: string;
+  badge?: string;
+  badgeColor?: "brand" | "muted" | "warning" | "destructive" | "info";
+}
+
+interface NavSection {
+  title: string;
+  items: NavItem[];
+}
+
+const overviewNav: NavItem[] = [
+  { label: "Dashboard", href: "/admin", icon: "dashboard" },
+];
+
+const managementNav: NavSection = {
+  title: "Management",
+  items: [
+    { label: "Products", href: "/admin/products", icon: "products" },
+    {
+      label: "Subscriptions",
+      href: "/admin/subscriptions",
+      icon: "subscriptions",
+    },
+    { label: "Users", href: "/admin/users", icon: "users" },
+    { label: "Refunds", href: "/admin/refunds", icon: "refunds" },
+  ],
+};
+
+const systemNav: NavSection = {
+  title: "System",
+  items: [
+    { label: "API Keys", href: "/admin/api-keys", icon: "api-keys" },
+    { label: "Webhooks", href: "/admin/webhooks", icon: "webhooks" },
+    { label: "Audit Log", href: "/admin/audit-log", icon: "audit" },
+  ],
+};
+
+const currentPath = Astro.url.pathname;
+---
+
+<div class="sidebar-root flex h-full flex-col relative">
+  <!-- Top accent gradient line — amber for admin -->
+  <div
+    class="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-400 dark:from-amber-600 dark:via-amber-500 dark:to-yellow-500 z-10"
+  >
+  </div>
+
+  <!-- Logo — Admin branding -->
+  <div class="flex h-16 items-center gap-3 px-6">
+    <div
+      class="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-600 text-white font-bold text-sm shadow-md shadow-amber-600/20"
+    >
+      A
+    </div>
+    <div class="flex flex-col">
+      <span class="text-lg font-bold tracking-tight leading-tight"
+        >Sattabase</span
+      >
+      <span
+        class="text-[10px] font-semibold uppercase tracking-widest text-amber-600 dark:text-amber-400 leading-tight"
+        >Admin</span
+      >
+    </div>
+  </div>
+
+  <!-- Main Navigation -->
+  <nav
+    class="nav-scroll flex-1 space-y-1 overflow-y-auto px-3 py-4"
+    aria-label="Admin navigation"
+  >
+    <!-- Section: Overview -->
+    <div class="nav-section" data-section="overview">
+      <button
+        type="button"
+        class="section-header flex w-full items-center justify-between px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 hover:text-muted-foreground transition-colors"
+        aria-expanded="true"
+        data-section-toggle="overview"
+      >
+        <span>Overview</span>
+        <svg
+          class="section-chevron h-3.5 w-3.5 transition-transform duration-200 rotate-0"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M19 9l-7 7-7-7"></path>
+        </svg>
+      </button>
+      <div class="section-items space-y-0.5 mt-1" data-section-items="overview">
+        {
+          overviewNav.map((item) => {
+            const isActive = currentPath === item.href;
+            return (
+              <a
+                href={item.href}
+                class:list={[
+                  "nav-item group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
+                  isActive
+                    ? "bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400"
+                    : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                ]}
+                aria-current={isActive ? "page" : undefined}
+              >
+                {isActive && (
+                  <span class="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-[3px] rounded-r-full bg-amber-600 dark:bg-amber-500" />
+                )}
+                {item.icon === "dashboard" && (
+                  <svg
+                    class="nav-icon h-5 w-5 shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="1.5"
+                      d="M4 5a1 1 0 011-1h4a1 1 0 011 1v5a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zM14 12a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1v-7z"
+                    />
+                  </svg>
+                )}
+                <span class="nav-label truncate">{item.label}</span>
+              </a>
+            );
+          })
+        }
+      </div>
+    </div>
+
+    <!-- Divider -->
+    <div class="my-3 border-t border-border"></div>
+
+    <!-- Section: Management -->
+    <div class="nav-section" data-section="management">
+      <button
+        type="button"
+        class="section-header flex w-full items-center justify-between px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 hover:text-muted-foreground transition-colors"
+        aria-expanded="true"
+        data-section-toggle="management"
+      >
+        <span>{managementNav.title}</span>
+        <svg
+          class="section-chevron h-3.5 w-3.5 transition-transform duration-200 rotate-0"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M19 9l-7 7-7-7"></path>
+        </svg>
+      </button>
+      <div
+        class="section-items space-y-0.5 mt-1"
+        data-section-items="management"
+      >
+        {
+          managementNav.items.map((item) => {
+            const isActive =
+              currentPath === item.href ||
+              currentPath.startsWith(item.href + "/");
+            return (
+              <a
+                href={item.href}
+                class:list={[
+                  "nav-item group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
+                  isActive
+                    ? "bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400"
+                    : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                ]}
+                aria-current={isActive ? "page" : undefined}
+              >
+                {isActive && (
+                  <span class="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-[3px] rounded-r-full bg-amber-600 dark:bg-amber-500" />
+                )}
+                {item.icon === "products" && (
+                  <svg
+                    class="nav-icon h-5 w-5 shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="1.5"
+                      d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                    />
+                  </svg>
+                )}
+                {item.icon === "subscriptions" && (
+                  <svg
+                    class="nav-icon h-5 w-5 shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="1.5"
+                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
+                    />
+                  </svg>
+                )}
+                {item.icon === "users" && (
+                  <svg
+                    class="nav-icon h-5 w-5 shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="1.5"
+                      d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                    />
+                  </svg>
+                )}
+                {item.icon === "refunds" && (
+                  <svg
+                    class="nav-icon h-5 w-5 shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="1.5"
+                      d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"
+                    />
+                  </svg>
+                )}
+                <span class="nav-label truncate">{item.label}</span>
+
+                {/* Badge */}
+                {item.badge && (
+                  <span
+                    class:list={[
+                      "nav-badge ml-auto inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide shrink-0",
+                      item.badgeColor === "brand" &&
+                        "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400",
+                      item.badgeColor === "muted" &&
+                        "bg-muted text-muted-foreground",
+                      item.badgeColor === "warning" &&
+                        "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400",
+                      item.badgeColor === "destructive" &&
+                        "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400",
+                      item.badgeColor === "info" &&
+                        "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400",
+                      !item.badgeColor && "bg-muted text-muted-foreground",
+                    ]}
+                  >
+                    {item.badge}
+                  </span>
+                )}
+              </a>
+            );
+          })
+        }
+      </div>
+    </div>
+
+    <!-- Divider -->
+    <div class="my-3 border-t border-border"></div>
+
+    <!-- Section: System -->
+    <div class="nav-section" data-section="system">
+      <button
+        type="button"
+        class="section-header flex w-full items-center justify-between px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 hover:text-muted-foreground transition-colors"
+        aria-expanded="true"
+        data-section-toggle="system"
+      >
+        <span>{systemNav.title}</span>
+        <svg
+          class="section-chevron h-3.5 w-3.5 transition-transform duration-200 rotate-0"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M19 9l-7 7-7-7"></path>
+        </svg>
+      </button>
+      <div class="section-items space-y-0.5 mt-1" data-section-items="system">
+        {
+          systemNav.items.map((item) => {
+            const isActive =
+              currentPath === item.href ||
+              currentPath.startsWith(item.href + "/");
+            return (
+              <a
+                href={item.href}
+                class:list={[
+                  "nav-item group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
+                  isActive
+                    ? "bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400"
+                    : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                ]}
+                aria-current={isActive ? "page" : undefined}
+              >
+                {isActive && (
+                  <span class="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-[3px] rounded-r-full bg-amber-600 dark:bg-amber-500" />
+                )}
+                {item.icon === "api-keys" && (
+                  <svg
+                    class="nav-icon h-5 w-5 shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="1.5"
+                      d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z"
+                    />
+                  </svg>
+                )}
+                {item.icon === "webhooks" && (
+                  <svg
+                    class="nav-icon h-5 w-5 shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="1.5"
+                      d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+                    />
+                  </svg>
+                )}
+                {item.icon === "audit" && (
+                  <svg
+                    class="nav-icon h-5 w-5 shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="1.5"
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
+                  </svg>
+                )}
+                <span class="nav-label truncate">{item.label}</span>
+
+                {/* Badge */}
+                {item.badge && (
+                  <span
+                    class:list={[
+                      "nav-badge ml-auto inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide shrink-0",
+                      item.badgeColor === "brand" &&
+                        "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400",
+                      item.badgeColor === "muted" &&
+                        "bg-muted text-muted-foreground",
+                      item.badgeColor === "warning" &&
+                        "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400",
+                      item.badgeColor === "destructive" &&
+                        "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400",
+                      item.badgeColor === "info" &&
+                        "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400",
+                      !item.badgeColor && "bg-muted text-muted-foreground",
+                    ]}
+                  >
+                    {item.badge}
+                  </span>
+                )}
+              </a>
+            );
+          })
+        }
+      </div>
+    </div>
+  </nav>
+
+  <!-- Bottom section -->
+  <div class="border-t border-border bg-card">
+    <!-- Back to user dashboard -->
+    <a
+      href="/dashboard"
+      class="flex items-center gap-3 px-6 py-2.5 text-sm font-medium text-muted-foreground transition-all duration-200 hover:bg-accent hover:text-foreground border-b border-border"
+    >
+      <svg
+        class="h-4 w-4 shrink-0"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M11 17l-5-5m0 0l5-5m-5 5h12"></path>
+      </svg>
+      <span>Back to Dashboard</span>
+    </a>
+
+    <!-- Django admin link -->
+    <a
+      href="/admin/django/"
+      class="flex items-center gap-3 px-6 py-2.5 text-sm font-medium text-muted-foreground/60 transition-all duration-200 hover:bg-accent hover:text-foreground"
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      <svg
+        class="h-4 w-4 shrink-0"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+        ></path>
+      </svg>
+      <span>Django Admin</span>
+    </a>
+
+    <!-- User info -->
+    <div class="px-4 py-3">
+      <div
+        id="admin-sidebar-user-info"
+        class="flex items-center gap-3 group cursor-pointer rounded-lg p-1 -mx-1 transition-colors hover:bg-accent"
+      >
+        <div
+          class="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-amber-500 to-amber-700 text-white text-xs font-bold shrink-0 ring-2 ring-amber-200 dark:ring-amber-800 transition-transform group-hover:scale-105"
+        >
+          <span id="admin-sidebar-user-avatar">?</span>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p
+            class="truncate text-sm font-medium leading-tight"
+            id="admin-sidebar-user-name"
+          >
+            Loading...
+          </p>
+          <p
+            class="truncate text-[11px] text-muted-foreground mt-0.5"
+            id="admin-sidebar-user-role"
+          >
+            Staff
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sign out -->
+    <button
+      type="button"
+      class="flex w-full items-center gap-3 px-6 py-2.5 text-sm font-medium text-muted-foreground/60 transition-all duration-200 hover:bg-destructive/5 hover:text-destructive border-t border-border"
+      id="admin-sidebar-sign-out"
+      aria-label="Sign out"
+    >
+      <svg
+        class="h-4 w-4 shrink-0"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+        ></path>
+      </svg>
+      <span>Sign out</span>
+    </button>
+  </div>
+</div>
+
+<style>
+  /* Nav item icon hover micro-animation */
+  .nav-item:hover .nav-icon {
+    transform: scale(1.1);
+  }
+  .nav-icon {
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  /* Active nav item glow — amber for admin */
+  .nav-item[aria-current="page"] .nav-icon {
+    filter: drop-shadow(0 0 2px rgba(217, 119, 6, 0.3));
+  }
+  .dark .nav-item[aria-current="page"] .nav-icon {
+    filter: drop-shadow(0 0 2px rgba(245, 158, 11, 0.4));
+  }
+
+  /* Custom thin scrollbar for nav */
+  .nav-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+  }
+  .nav-scroll:hover {
+    scrollbar-color: var(--color-muted-fg) transparent;
+  }
+  .nav-scroll::-webkit-scrollbar-thumb {
+    background: transparent;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+  .nav-scroll:hover::-webkit-scrollbar-thumb {
+    background: var(--color-muted-fg);
+  }
+
+  /* Section collapse animation */
+  .section-items {
+    transition:
+      max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+      opacity 0.25s ease,
+      margin-top 0.3s ease;
+  }
+  .section-items.collapsed {
+    max-height: 0 !important;
+    opacity: 0;
+    margin-top: 0 !important;
+    overflow: hidden;
+  }
+  .section-items.expanded {
+    max-height: 500px;
+    opacity: 1;
+  }
+</style>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    // ── Section collapse/expand ──
+    const sectionToggles = document.querySelectorAll("[data-section-toggle]");
+    sectionToggles.forEach((toggle) => {
+      toggle.addEventListener("click", () => {
+        const sectionKey = (toggle as HTMLElement).dataset.sectionToggle;
+        const items = document.querySelector(
+          `[data-section-items="${sectionKey}"]`,
+        ) as HTMLElement;
+        const chevron = toggle.querySelector(".section-chevron") as HTMLElement;
+        if (!items || !chevron) return;
+
+        const isExpanded = items.classList.contains("expanded");
+        if (isExpanded) {
+          items.classList.remove("expanded");
+          items.classList.add("collapsed");
+          chevron.style.transform = "rotate(-90deg)";
+          toggle.setAttribute("aria-expanded", "false");
+        } else {
+          items.classList.remove("collapsed");
+          items.classList.add("expanded");
+          chevron.style.transform = "rotate(0deg)";
+          toggle.setAttribute("aria-expanded", "true");
+        }
+      });
+    });
+
+    // Initialize: expanded sections
+    document.querySelectorAll("[data-section-items]").forEach((el) => {
+      const items = el as HTMLElement;
+      if (!items.classList.contains("collapsed")) {
+        items.classList.add("expanded");
+      }
+    });
+
+    // ── Sign out ──
+    const signOutBtn = document.getElementById("admin-sidebar-sign-out");
+    signOutBtn?.addEventListener("click", async (e) => {
+      e.preventDefault();
+      try {
+        const { logout } = await import("@/lib/auth");
+        await logout();
+      } catch {
+        sessionStorage.removeItem("auth_access_token");
+        sessionStorage.removeItem("auth_refresh_token");
+        localStorage.removeItem("auth_access_token");
+        localStorage.removeItem("auth_refresh_token");
+        localStorage.removeItem("auth_remember_me");
+        window.location.href = "/auth/login";
+      }
+    });
+
+    // ── Populate user info ──
+    async function populateAdminUserInfo() {
+      try {
+        const { apiClient } = await import("@/lib/api");
+        const user = await apiClient.get<{
+          display_name?: string;
+          email: string;
+          role: string;
+          is_staff: boolean;
+        }>("/users/me");
+        const displayName = user.display_name || user.email;
+        const roleLabel = user.is_staff
+          ? "Super Admin"
+          : user.role === "owner"
+            ? "Owner"
+            : user.role === "admin"
+              ? "Admin"
+              : "Staff";
+
+        const avatarEl = document.getElementById("admin-sidebar-user-avatar");
+        const nameEl = document.getElementById("admin-sidebar-user-name");
+        const roleEl = document.getElementById("admin-sidebar-user-role");
+
+        const initials = displayName
+          .split(" ")
+          .map((n: string) => n[0])
+          .join("")
+          .slice(0, 2)
+          .toUpperCase();
+
+        if (avatarEl) avatarEl.textContent = initials;
+        if (nameEl) nameEl.textContent = displayName;
+        if (roleEl) roleEl.textContent = roleLabel;
+      } catch {
+        // Not authenticated — will redirect via middleware
+      }
+    }
+    populateAdminUserInfo();
+
+    // ── Active nav highlight (client-side, works with transition:persist) ──
+    function updateActiveNav() {
+      const currentPath = window.location.pathname;
+
+      document.querySelectorAll(".nav-item").forEach((item) => {
+        const href = (item as HTMLAnchorElement).getAttribute("href");
+        if (!href) return;
+
+        // Admin dashboard: exact match only
+        if (href === "/admin") {
+          const isActive =
+            currentPath === "/admin" || currentPath === "/admin/";
+          item.classList.toggle("bg-amber-50", isActive);
+          item.classList.toggle("text-amber-700", isActive);
+          item.classList.toggle("dark:bg-amber-950/60", isActive);
+          item.classList.toggle("dark:text-amber-400", isActive);
+          item.classList.toggle("text-muted-foreground", !isActive);
+          item.setAttribute("aria-current", isActive ? "page" : undefined);
+          return;
+        }
+
+        // All other nav items: exact or prefix match
+        const isActive =
+          currentPath === href || currentPath.startsWith(href + "/");
+        item.classList.toggle("bg-amber-50", isActive);
+        item.classList.toggle("text-amber-700", isActive);
+        item.classList.toggle("dark:bg-amber-950/60", isActive);
+        item.classList.toggle("dark:text-amber-400", isActive);
+        item.classList.toggle("text-muted-foreground", !isActive);
+        item.setAttribute("aria-current", isActive ? "page" : undefined);
+      });
+
+      // Update active indicator bars
+      document.querySelectorAll(".nav-item").forEach((item) => {
+        const isActive = item.getAttribute("aria-current") === "page";
+        let indicator = item.querySelector(
+          ".active-indicator-bar",
+        ) as HTMLElement | null;
+        if (isActive && !indicator) {
+          indicator = document.createElement("span");
+          indicator.className =
+            "active-indicator-bar absolute left-0 top-1/2 -translate-y-1/2 h-6 w-[3px] rounded-r-full bg-amber-600 dark:bg-amber-500";
+          item.appendChild(indicator);
+        } else if (!isActive && indicator) {
+          indicator.remove();
+        }
+      });
+    }
+
+    updateActiveNav();
+    document.addEventListener("astro:page-load", updateActiveNav);
+    document.addEventListener("astro:after-swap", updateActiveNav);
+  });
+</script>

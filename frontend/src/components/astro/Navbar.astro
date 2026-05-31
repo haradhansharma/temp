@@ -1,0 +1,315 @@
+---
+
+---
+
+<header class="z-40 bg-card/80 backdrop-blur-md"></header>
+  <div class="flex h-16 items-center justify-between px-4 md:px-6">
+    <!-- Left: Mobile menu + Breadcrumb -->
+    <div class="flex items-center gap-4">
+      <!-- Mobile menu button -->
+      <button
+        type="button"
+        class="lg:hidden inline-flex items-center justify-center rounded-lg p-2 text-muted-foreground hover:bg-accent hover:text-foreground focus-ring transition-colors"
+        id="mobile-menu-toggle"
+        aria-label="Toggle sidebar menu"
+        aria-expanded="false"
+      >
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+
+      <!-- Mobile logo -->
+      <div class="flex items-center gap-2 lg:hidden">
+        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-white font-bold text-xs shadow-sm">
+          S
+        </div>
+        <span class="font-semibold text-sm">SattaBase</span>
+      </div>
+
+      <!-- Desktop breadcrumb placeholder -->
+      <nav class="hidden lg:block" aria-label="Breadcrumb">
+        <ol class="flex items-center gap-1.5 text-sm text-muted-foreground">
+          <li class="flex items-center gap-1.5">
+            <a href="/dashboard" class="transition-colors hover:text-foreground">Dashboard</a>
+          </li>
+        </ol>
+      </nav>
+    </div>
+
+    <!-- Right: Actions -->
+    <div class="flex items-center gap-2">
+
+      <!-- Dark mode toggle -->
+      <button
+        type="button"
+        class="inline-flex items-center justify-center rounded-lg p-2 text-muted-foreground hover:bg-accent hover:text-foreground focus-ring transition-colors"
+        id="dark-mode-toggle"
+        aria-label="Toggle dark mode"
+      >
+        <!-- Sun icon (shown in dark mode) -->
+        <svg class="h-5 w-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+        </svg>
+        <!-- Moon icon (shown in light mode) -->
+        <svg class="h-5 w-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+        </svg>
+      </button>
+
+      <!-- Notifications -->
+      <div class="relative" id="notification-dropdown-wrapper">
+        <button
+          type="button"
+          class="relative inline-flex items-center justify-center rounded-lg p-2 text-muted-foreground hover:bg-accent hover:text-foreground focus-ring transition-colors"
+          aria-label="Notifications"
+          aria-expanded="false"
+          id="notification-toggle"
+        >
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+          </svg>
+          <span class="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-brand-500 text-[10px] font-bold text-white">
+            0
+          </span>
+        </button>
+
+        <!-- Notification dropdown -->
+        <div
+          class="hidden absolute right-0 top-full mt-2 w-80 rounded-xl border border-border bg-card shadow-lg animate-scale-in origin-top-right"
+          id="notification-dropdown"
+          role="menu"
+        >
+          <div class="px-4 py-3 border-b border-border">
+            <h3 class="text-sm font-semibold text-foreground">Notifications</h3>
+          </div>
+          <div class="py-6 text-center">
+            <svg class="mx-auto h-8 w-8 text-muted-foreground/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            </svg>
+            <p class="mt-2 text-sm text-muted-foreground">No notifications yet</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Divider -->
+      <div class="hidden h-6 w-px bg-border sm:block"></div>
+
+      <!-- User dropdown -->
+      <div class="relative" id="user-dropdown-wrapper">
+        <button
+          type="button"
+          class="flex items-center gap-2 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-accent focus-ring"
+          id="user-menu-toggle"
+          aria-label="User menu"
+          aria-expanded="false"
+        >
+          <div class="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-sm font-medium">
+            ?
+          </div>
+          <span class="hidden md:inline text-sm font-medium truncate max-w-32" id="navbar-user-name">Loading...</span>
+          <!-- Chevron -->
+          <svg class="hidden md:block h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+
+        <!-- User dropdown menu -->
+        <div
+          class="hidden absolute right-0 top-full mt-2 w-56 rounded-xl border border-border bg-card shadow-lg animate-scale-in origin-top-right"
+          id="user-dropdown"
+          role="menu"
+        >
+          <div class="px-4 py-3 border-b border-border">
+            <p class="text-sm font-medium truncate" id="user-dropdown-name">Loading...</p>
+            <p class="flex items-center gap-2 mt-0.5">
+              <span class="text-xs text-muted-foreground truncate" id="user-dropdown-email">...</span>
+              <span class="ml-auto inline-flex items-center rounded-md border border-border bg-muted/60 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground" id="navbar-currency-badge" title="Your account currency">
+                —
+              </span>
+            </p>
+          </div>
+          <div class="py-1">
+            <a href="/dashboard/profile" class="flex items-center gap-3 px-4 py-2.5 text-sm text-foreground transition-colors hover:bg-accent" role="menuitem">
+              <svg class="h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              Profile
+            </a>
+            <a href="/dashboard/settings" class="flex items-center gap-3 px-4 py-2.5 text-sm text-foreground transition-colors hover:bg-accent" role="menuitem">
+              <svg class="h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              Settings
+            </a>
+          </div>
+          <div class="border-t border-border py-1">
+            <button
+              type="button"
+              class="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-destructive transition-colors hover:bg-destructive/10"
+              role="menuitem"
+              id="navbar-sign-out"
+            >
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              Sign out
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const mobileMenuToggle = document.getElementById("mobile-menu-toggle");
+    const darkModeToggle = document.getElementById("dark-mode-toggle");
+    const userMenuToggle = document.getElementById("user-menu-toggle");
+    const userDropdown = document.getElementById("user-dropdown");
+    const notificationToggle = document.getElementById("notification-toggle");
+    const notificationDropdown = document.getElementById("notification-dropdown");
+    const signOutBtn = document.getElementById("navbar-sign-out");
+
+    // ── Mobile sidebar toggle → dispatch custom event ──
+    mobileMenuToggle?.addEventListener("click", () => {
+      document.dispatchEvent(
+        new CustomEvent("toggle-mobile-sidebar", { detail: { open: true } })
+      );
+      mobileMenuToggle.setAttribute("aria-expanded", "true");
+    });
+
+    // ── Dark mode toggle ──
+    darkModeToggle?.addEventListener("click", () => {
+      const html = document.documentElement;
+      const isDark = html.classList.toggle("dark");
+      localStorage.setItem("theme", isDark ? "dark" : "light");
+
+      // Update theme-color meta
+      const meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) {
+        meta.setAttribute("content", isDark ? "#0a0a0a" : "#16a34a");
+      }
+    });
+
+    // ── User dropdown toggle ──
+    userMenuToggle?.addEventListener("click", () => {
+      const isHidden = userDropdown?.classList.contains("hidden");
+      // Close all dropdowns first
+      closeAllDropdowns();
+      if (isHidden) {
+        userDropdown?.classList.remove("hidden");
+        userMenuToggle.setAttribute("aria-expanded", "true");
+      } else {
+        userMenuToggle.setAttribute("aria-expanded", "false");
+      }
+    });
+
+    // ── Notification dropdown toggle ──
+    notificationToggle?.addEventListener("click", () => {
+      const isHidden = notificationDropdown?.classList.contains("hidden");
+      closeAllDropdowns();
+      if (isHidden) {
+        notificationDropdown?.classList.remove("hidden");
+        notificationToggle.setAttribute("aria-expanded", "true");
+      } else {
+        notificationToggle.setAttribute("aria-expanded", "false");
+      }
+    });
+
+    // ── Sign out ──
+    signOutBtn?.addEventListener("click", async () => {
+      try {
+        const { logout } = await import("@/lib/auth");
+        await logout();
+      } catch {
+        // If module fails, clear tokens manually
+        sessionStorage.removeItem("auth_access_token");
+        sessionStorage.removeItem("auth_refresh_token");
+        localStorage.removeItem("auth_access_token");
+        localStorage.removeItem("auth_refresh_token");
+        localStorage.removeItem("auth_remember_me");
+        window.location.href = "/auth/login";
+      }
+    });
+
+    // ── Close dropdowns on outside click ──
+    document.addEventListener("click", (e) => {
+      const target = e.target as HTMLElement;
+      const userWrapper = document.getElementById("user-dropdown-wrapper");
+      const notifWrapper = document.getElementById("notification-dropdown-wrapper");
+
+      if (userWrapper && !userWrapper.contains(target)) {
+        userDropdown?.classList.add("hidden");
+        userMenuToggle?.setAttribute("aria-expanded", "false");
+      }
+      if (notifWrapper && !notifWrapper.contains(target)) {
+        notificationDropdown?.classList.add("hidden");
+        notificationToggle?.setAttribute("aria-expanded", "false");
+      }
+    });
+
+    // ── Close dropdowns on Escape ──
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        closeAllDropdowns();
+      }
+    });
+
+    function closeAllDropdowns() {
+      userDropdown?.classList.add("hidden");
+      notificationDropdown?.classList.add("hidden");
+      userMenuToggle?.setAttribute("aria-expanded", "false");
+      notificationToggle?.setAttribute("aria-expanded", "false");
+    }
+
+    // ── Populate user info from localStorage/API ──
+    async function populateUserInfo() {
+      try {
+        const { getCurrentUser } = await import("@/lib/auth");
+        const user = await getCurrentUser();
+        const displayName = user.display_name || user.email;
+
+        // F13: Set user's currency for formatPrice() default + display in navbar
+        const { setUserCurrency } = await import("@/lib/billing");
+        setUserCurrency(user.currency);
+
+        const currencyBadge = document.getElementById("navbar-currency-badge");
+        if (currencyBadge && user.currency) {
+          currencyBadge.textContent = user.currency;
+        }
+
+        const navbarName = document.getElementById("navbar-user-name");
+        const dropdownName = document.getElementById("user-dropdown-name");
+        const dropdownEmail = document.getElementById("user-dropdown-email");
+        const sidebarName = document.getElementById("sidebar-user-name");
+        const sidebarEmail = document.getElementById("sidebar-user-email");
+
+        // Set avatar initials
+        const initials = displayName
+          .split(" ")
+          .map((n: string) => n[0])
+          .join("")
+          .slice(0, 2)
+          .toUpperCase();
+
+        // Update avatar placeholders
+        document.querySelectorAll("#navbar-user-menu .rounded-full, #sidebar-user-info .rounded-full").forEach((el) => {
+          el.textContent = initials;
+        });
+
+        if (navbarName) navbarName.textContent = displayName;
+        if (dropdownName) dropdownName.textContent = displayName;
+        if (dropdownEmail) dropdownEmail.textContent = user.email;
+        if (sidebarName) sidebarName.textContent = displayName;
+        if (sidebarEmail) sidebarEmail.textContent = user.email;
+      } catch {
+        // User not authenticated — will redirect to login via API client
+      }
+    }
+
+    populateUserInfo();
+  });
+</script>

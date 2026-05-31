@@ -1,0 +1,21 @@
+---
+/**
+ * Admin Subscriptions — /admin/subscriptions
+ *
+ * Subscription list management page.
+ * Mounts SubscriptionsAdmin Vue component.
+ */
+import AdminLayout from "@/layouts/AdminLayout.astro";
+import SubscriptionsAdmin from "@/components/admin/SubscriptionsAdmin.vue";
+---
+
+<AdminLayout
+  title="Subscriptions — Admin — SattaBase"
+  description="View and manage all user subscriptions."
+>
+  <SubscriptionsAdmin client:only="vue" />
+</AdminLayout>
+
+<script>
+  import { useAdminGuard } from "@/composables/useAdminGuard";
+</script>

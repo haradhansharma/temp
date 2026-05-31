@@ -1,0 +1,21 @@
+---
+/**
+ * Admin Audit Log — /admin/audit-log
+ *
+ * Track admin actions and system changes.
+ * Mounts AuditLogAdmin Vue component.
+ */
+import AdminLayout from "@/layouts/AdminLayout.astro";
+import AuditLogAdmin from "@/components/admin/AuditLogAdmin.vue";
+---
+
+<AdminLayout
+  title="Audit Log — Admin — SattaBase"
+  description="Track admin actions and system changes."
+>
+  <AuditLogAdmin client:only="vue" />
+</AdminLayout>
+
+<script>
+  import { useAdminGuard } from "@/composables/useAdminGuard";
+</script>

@@ -1,0 +1,8 @@
+---
+import DashboardLayout from "@/layouts/DashboardLayout.astro";
+import TransactionHistory from "@/components/vue/TransactionHistory.vue";
+---
+
+<DashboardLayout title="Transactions — SattaBase" description="View your complete billing history and download invoices.">
+  <TransactionHistory client:only="vue" />
+</DashboardLayout>

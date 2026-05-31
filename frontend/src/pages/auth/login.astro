@@ -1,0 +1,8 @@
+---
+import AuthLayout from "@/layouts/AuthLayout.astro";
+import LoginForm from "@/components/vue/LoginForm.vue";
+---
+
+<AuthLayout title="Sign In — SattaBase" description="Sign in to your SattaBase account.">
+  <LoginForm client:only="vue" />
+</AuthLayout>
