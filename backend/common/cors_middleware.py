@@ -90,12 +90,10 @@ def _get_allowed_origins() -> set:
 def _inject_cors(response, origin: str):
     """Inject CORS headers into *response* for *origin*.
 
-    Only injects if ``django-cors-headers`` hasn't already set
-    ``Access-Control-Allow-Origin`` (avoids overriding its work).
+    Always sets headers to ensure proper credential support.
+    This overrides any existing `Access-Control-Allow-Origin: *` header
+    that may have been set by django-cors-headers with CORS_ALLOW_ALL_ORIGINS=True.
     """
-    if response.get("Access-Control-Allow-Origin"):
-        return
-
     response["Access-Control-Allow-Origin"] = origin
     response["Access-Control-Allow-Methods"] = (
         "GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD"
@@ -118,7 +116,9 @@ def service_domain_cors_middleware(get_response):
     CORS flow, and this middleware adds dynamic origin support.
 
     When ``CORS_ALLOW_ALL_ORIGINS`` is True (DEBUG mode), this middleware
-    does nothing — all origins are already allowed.
+    still needs to inject proper CORS headers for credential-based requests
+    (cookies), because `Access-Control-Allow-Origin: *` is incompatible with
+    `Access-Control-Allow-Credentials: true`.
 
     Django 5.2 ``@sync_and_async_middleware`` pattern:
         - If the next middleware in the chain is async (ASGI/Daphne),
@@ -130,36 +130,54 @@ def service_domain_cors_middleware(get_response):
     if iscoroutinefunction(get_response):
         # ASGI path (Daphne / uvicorn)
         async def middleware(request):
-            if getattr(settings, "CORS_ALLOW_ALL_ORIGINS", False):
-                return await get_response(request)
-
             origin = request.META.get("HTTP_ORIGIN", "").strip()
-            if not origin:
-                return await get_response(request)
-
-            allowed_origins = _get_allowed_origins()
-            if origin in allowed_origins:
-                response = await get_response(request)
-                _inject_cors(response, origin)
-                return response
+            
+            # Always inject specific CORS headers when we have an Origin header
+            # This is needed because CORS_ALLOW_ALL_ORIGINS=True sends "*" as origin
+            # which is incompatible with credentials (cookies)
+            if origin:
+                # Check if origin is allowed
+                allowed_origins = _get_allowed_origins()
+                
+                # In DEBUG mode with CORS_ALLOW_ALL_ORIGINS=True, allow any localhost origin
+                # This is safe for development and enables cookie-based auth to work
+                is_debug_all_origins = (
+                    getattr(settings, "CORS_ALLOW_ALL_ORIGINS", False) 
+                    and getattr(settings, "DEBUG", False)
+                )
+                is_localhost = "localhost" in origin or "127.0.0.1" in origin
+                
+                if origin in allowed_origins or (is_debug_all_origins and is_localhost):
+                    response = await get_response(request)
+                    _inject_cors(response, origin)
+                    return response
 
             return await get_response(request)
 
     else:
         # WSGI path (standard runserver / gunicorn)
         def middleware(request):
-            if getattr(settings, "CORS_ALLOW_ALL_ORIGINS", False):
-                return get_response(request)
-
             origin = request.META.get("HTTP_ORIGIN", "").strip()
-            if not origin:
-                return get_response(request)
-
-            allowed_origins = _get_allowed_origins()
-            if origin in allowed_origins:
-                response = get_response(request)
-                _inject_cors(response, origin)
-                return response
+            
+            # Always inject specific CORS headers when we have an Origin header
+            # This is needed because CORS_ALLOW_ALL_ORIGINS=True sends "*" as origin
+            # which is incompatible with credentials (cookies)
+            if origin:
+                # Check if origin is allowed
+                allowed_origins = _get_allowed_origins()
+                
+                # In DEBUG mode with CORS_ALLOW_ALL_ORIGINS=True, allow any localhost origin
+                # This is safe for development and enables cookie-based auth to work
+                is_debug_all_origins = (
+                    getattr(settings, "CORS_ALLOW_ALL_ORIGINS", False) 
+                    and getattr(settings, "DEBUG", False)
+                )
+                is_localhost = "localhost" in origin or "127.0.0.1" in origin
+                
+                if origin in allowed_origins or (is_debug_all_origins and is_localhost):
+                    response = get_response(request)
+                    _inject_cors(response, origin)
+                    return response
 
             return get_response(request)
 

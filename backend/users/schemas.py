@@ -119,6 +119,10 @@ class LoginInputSchema(Schema):
         ...,
         description="User's password",
     )
+    remember: bool = Field(
+        False,
+        description="If true, refresh token cookie persists for 30 days instead of session",
+    )
 
 
 class TokenOutputSchema(Schema):
@@ -128,10 +132,22 @@ class TokenOutputSchema(Schema):
     refresh: str = Field(..., description="Refresh token (long-lived)")
 
 
+class AccessTokenOnlySchema(Schema):
+    """Schema for access token only response (refresh token in httpOnly cookie)."""
+
+    access: str = Field(..., description="Access token (short-lived)")
+
+
 class TokenRefreshInputSchema(Schema):
     """Schema for token refresh request."""
 
     refresh: str = Field(..., description="Refresh token")
+
+
+class CookieRefreshInputSchema(Schema):
+    """Schema for cookie-based token refresh - no body needed, reads from cookie."""
+
+    pass
 
 
 class TokenVerifyInputSchema(Schema):

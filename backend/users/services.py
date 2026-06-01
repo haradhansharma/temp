@@ -137,29 +137,70 @@ class AuthService:
 
     @staticmethod
     def authenticate_user(email: str, password: str) -> User:
-        """Authenticate a user with email and password."""
-        user = authenticate(request=None, username=email, password=password)
-
-        if not user:
+        """Authenticate a user with email and password.
+        
+        CRIT-02 FIX: Added account lockout mechanism to prevent brute force attacks.
+        After 5 failed attempts, the account is locked for 30 minutes.
+        """
+        # First check if user exists to track failed attempts
+        try:
+            user = UserModel.objects.get(email=email)
+        except UserModel.DoesNotExist:
             raise ValueError("Invalid email or password.")
-
+        
+        # Check if account is locked
+        if user.is_account_locked():
+            logger.warning(f"LOGIN_ATTEMPT_ON_LOCKED_ACCOUNT: email={email}")
+            raise ValueError(
+                "Your account is temporarily locked due to multiple failed login attempts. "
+                "Please try again later or contact support."
+            )
+        
+        # Check password
+        if not user.check_password(password):
+            user.increment_failed_login()
+            raise ValueError("Invalid email or password.")
+        
+        # Check account status
         if not user.is_active:
             raise ValueError("Your account is not active. Please contact support.")
 
         if user.is_deleted:
             raise ValueError("This account has been deactivated.")
-
+        
+        # Reset failed attempts on successful login
+        user.reset_failed_login_attempts()
         return user
 
     @staticmethod
     async def aauthenticate_user(email: str, password: str) -> User:
-        """Async version of authenticate_user()."""
-        user = await UserModel.objects.aget_by_email(email)
-
-        if not user:
+        """Async version of authenticate_user().
+        
+        CRIT-02 FIX: Added account lockout mechanism to prevent brute force attacks.
+        After 5 failed attempts, the account is locked for 30 minutes.
+        
+        MED-01 FIX: Now uses user.check_password() via sync_to_async for consistency
+        with sync version. Previously used hashers.check_password() directly which
+        bypassed any custom password validation logic.
+        """
+        # First check if user exists to track failed attempts
+        try:
+            user = await UserModel.objects.aget(email=email, is_deleted=False)
+        except UserModel.DoesNotExist:
             raise ValueError("Invalid email or password.")
+        
+        # Check if account is locked
+        if user.is_account_locked():
+            logger.warning(f"LOGIN_ATTEMPT_ON_LOCKED_ACCOUNT: email={email}")
+            raise ValueError(
+                "Your account is temporarily locked due to multiple failed login attempts. "
+                "Please try again later or contact support."
+            )
 
-        if not hashers.check_password(password, user.password):
+        # MED-01 FIX: Use user.check_password() for consistency with sync version
+        # This ensures any custom password validation logic is applied
+        if not await sync_to_async(user.check_password)(password):
+            await sync_to_async(user.increment_failed_login)()
             raise ValueError("Invalid email or password.")
 
         if not user.is_active:
@@ -167,7 +208,9 @@ class AuthService:
 
         if user.is_deleted:
             raise ValueError("This account has been deactivated.")
-
+        
+        # Reset failed attempts on successful login
+        await sync_to_async(user.reset_failed_login_attempts)()
         return user
 
     # =========================================================================
@@ -829,14 +872,28 @@ class AuthService:
         
         Validates the code exists in Redis, retrieves the user, and deletes the code
         (one-time use). Raises ValueError if code is invalid, expired, or user is inactive.
+        
+        LOW-05 FIX: Added constant-time delay to prevent timing attacks on auth code
+        validation. An attacker could measure response times to determine if a code
+        is valid or not. By adding a fixed delay, we make timing attacks impractical.
         """
+        import asyncio
+        import time
         from django.core.cache import cache
         from .models import User
+        
+        # LOW-05 FIX: Record start time for constant-time response
+        start_time = time.perf_counter()
+        MIN_PROCESSING_TIME = 0.010  # 10ms minimum processing time
         
         cache_key = f"{AuthService.AUTH_CODE_CACHE_PREFIX}:{code}"
         code_data = cache.get(cache_key)
         
         if code_data is None:
+            # LOW-05 FIX: Add delay before returning to prevent timing attacks
+            elapsed = time.perf_counter() - start_time
+            if elapsed < MIN_PROCESSING_TIME:
+                await asyncio.sleep(MIN_PROCESSING_TIME - elapsed)
             raise ValueError("Invalid or expired authorization code.")
         
         # Delete the code immediately (one-time use)

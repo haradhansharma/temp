@@ -18,9 +18,10 @@
  *   const { user, subscription, access, loading, error, refetch } = useAuth();
  */
 
-import { ref, computed } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
 import { billingApi, setUserCurrency } from "@/lib/billing";
 import { requireAuth, getErrorMessage } from "@/lib/auth";
+import { authHelpers, onAuthEvent } from "@/lib/api";
 import { showToast } from "@/lib/toast";
 import type { UserProfile } from "@/lib/auth";
 import type { SubscriptionInfoSchema } from "@/lib/billing";
@@ -54,6 +55,20 @@ if (typeof window !== "undefined") {
       fetchPromise = null;
       // Silent background refetch — errors handled internally
       fetchAuthMe().catch(() => {});
+    }
+  });
+
+  // Listen for auth logout events from api.ts
+  // This handles the case where multiple concurrent requests fail auth
+  // and we need to redirect to login
+  onAuthEvent((event) => {
+    if (event === "auth:logout") {
+      // Clear the shared state
+      sharedUser.value = null;
+      sharedSubscription.value = null;
+      sharedAccess.value = {};
+      sharedInitialized.value = false;
+      fetchPromise = null;
     }
   });
 }
@@ -127,6 +142,10 @@ export function useAuth() {
    * to login if not authenticated. Use this in onMounted() of protected pages.
    */
   async function initAuth(): Promise<boolean> {
+    // Wait for token initialization to complete (fixes race condition)
+    // This ensures the cookie-based token refresh has finished before checking auth
+    await authHelpers.waitForInit();
+
     if (!requireAuth()) return false;
     await fetchUser();
     return !!sharedUser.value;

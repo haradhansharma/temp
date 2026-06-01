@@ -579,3 +579,386 @@ def recognize_revenue(self, target_date: str = None):
     except Exception as exc:
         logger.error(f"Revenue recognition task failed: {exc}", exc_info=True)
         raise self.retry(exc=exc)
+
+
+# =============================================================================
+# Credit Request Email Notifications
+# =============================================================================
+
+
+@shared_task(
+    bind=True,
+    max_retries=3,
+    default_retry_delay=60,  # 1 min between retries
+)
+def send_credit_request_approved_email(
+    self,
+    user_email: str,
+    user_name: str,
+    product_name: str,
+    plan_name: str,
+    amount_cents: int,
+    currency: str,
+    credit_pool_id: int,
+    invoice_number: str,
+    periods: int,
+):
+    """Send email notification when a credit request is approved.
+
+    Called after admin approves a CreditPurchaseRequest. Sends a confirmation
+    email to the user with their credit pool details and invoice number.
+
+    Args:
+        user_email: Recipient email address.
+        user_name: User's first name or display name.
+        product_name: Product name for the credit.
+        plan_name: Plan name for the credit.
+        amount_cents: Amount paid in cents.
+        currency: ISO 4217 currency code.
+        credit_pool_id: ID of the created CreditPool.
+        invoice_number: Invoice number for reference.
+        periods: Number of billing periods credited.
+    """
+    from django.core.mail import send_mail
+    from django.conf import settings
+
+    try:
+        # Format amount
+        amount_display = f"{amount_cents / 100:.2f} {currency}"
+
+        # Build email body
+        subject = f"Credit Purchase Approved — {product_name}"
+        body = (
+            f"Hi {user_name or user_email.split('@')[0]},\n\n"
+            f"Great news! Your credit purchase request has been approved.\n\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"Credit Details:\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"Product: {product_name}\n"
+            f"Plan: {plan_name}\n"
+            f"Amount: {amount_display}\n"
+            f"Billing Periods: {periods}\n"
+            f"Invoice: {invoice_number}\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            f"Your credits are now active and will be applied to your subscription "
+            f"automatically each billing cycle.\n\n"
+            f"You can view your credit pools and invoices at:\n"
+            f"{getattr(settings, 'STRIPE_APP_DOMAIN', '')}/dashboard/billing/credits\n\n"
+            f"If you have any questions, please contact our support team.\n\n"
+            f"Thank you for your payment!\n\n"
+            f"— The SattaBase Team"
+        )
+
+        sent = send_mail(
+            subject=subject,
+            message=body,
+            from_email=getattr(settings, "DEFAULT_FROM_EMAIL", "noreply@sattabase.com"),
+            recipient_list=[user_email],
+            fail_silently=False,
+        )
+
+        if sent:
+            logger.info(
+                f"CREDIT_EMAIL: Sent approval notification to {user_email} "
+                f"for credit_pool={credit_pool_id}"
+            )
+            return {"status": "sent", "user_email": user_email}
+        else:
+            logger.warning(
+                f"CREDIT_EMAIL: Failed to send approval notification to {user_email}"
+            )
+            return {"status": "failed", "user_email": user_email}
+
+    except Exception as exc:
+        logger.error(
+            f"CREDIT_EMAIL: Error sending approval email to {user_email}: {exc}",
+            exc_info=True,
+        )
+        raise self.retry(exc=exc)
+
+
+@shared_task(
+    bind=True,
+    max_retries=3,
+    default_retry_delay=60,  # 1 min between retries
+)
+def send_credit_request_rejected_email(
+    self,
+    user_email: str,
+    user_name: str,
+    product_name: str,
+    plan_name: str,
+    amount_cents: int,
+    currency: str,
+    reason: str = "",
+):
+    """Send email notification when a credit request is rejected.
+
+    Called after admin rejects a CreditPurchaseRequest. Sends a notification
+    email to the user explaining the rejection.
+
+    Args:
+        user_email: Recipient email address.
+        user_name: User's first name or display name.
+        product_name: Product name for the request.
+        plan_name: Plan name for the request.
+        amount_cents: Amount in cents that was requested.
+        currency: ISO 4217 currency code.
+        reason: Optional rejection reason from admin.
+    """
+    from django.core.mail import send_mail
+    from django.conf import settings
+
+    try:
+        # Format amount
+        amount_display = f"{amount_cents / 100:.2f} {currency}"
+
+        # Build email body
+        subject = f"Credit Request Update — {product_name}"
+        body = (
+            f"Hi {user_name or user_email.split('@')[0]},\n\n"
+            f"We've reviewed your credit purchase request for {product_name} "
+            f"({plan_name}), but unfortunately we were unable to process it at this time.\n\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"Request Details:\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"Product: {product_name}\n"
+            f"Plan: {plan_name}\n"
+            f"Amount: {amount_display}\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+        )
+
+        if reason:
+            body += (
+                f"Reason: {reason}\n\n"
+            )
+
+        body += (
+            f"If you believe this is an error or would like to submit a new request, "
+            f"please visit:\n"
+            f"{getattr(settings, 'STRIPE_APP_DOMAIN', '')}/dashboard/billing/credits/request\n\n"
+            f"For assistance, please contact our support team.\n\n"
+            f"— The SattaBase Team"
+        )
+
+        sent = send_mail(
+            subject=subject,
+            message=body,
+            from_email=getattr(settings, "DEFAULT_FROM_EMAIL", "noreply@sattabase.com"),
+            recipient_list=[user_email],
+            fail_silently=False,
+        )
+
+        if sent:
+            logger.info(
+                f"CREDIT_EMAIL: Sent rejection notification to {user_email}"
+            )
+            return {"status": "sent", "user_email": user_email}
+        else:
+            logger.warning(
+                f"CREDIT_EMAIL: Failed to send rejection notification to {user_email}"
+            )
+            return {"status": "failed", "user_email": user_email}
+
+    except Exception as exc:
+        logger.error(
+            f"CREDIT_EMAIL: Error sending rejection email to {user_email}: {exc}",
+            exc_info=True,
+        )
+        raise self.retry(exc=exc)
+
+
+# =============================================================================
+# Credit Period Consumption
+# =============================================================================
+
+
+@shared_task(
+    bind=True,
+    max_retries=2,
+    default_retry_delay=600,  # 10 min between retries
+)
+def consume_credit_periods(self):
+    """Periodic task to consume billing periods from active credit pools.
+
+    Called daily by Celery Beat. For each active credit pool:
+      1. Check if current_period_end has passed
+      2. If yes, consume one period and start a new billing period
+      3. If no periods remaining, mark as exhausted
+
+    This task ensures that credit pools behave like subscriptions — each
+    billing period is "consumed" as time passes, and the pool becomes
+    exhausted when all periods are used.
+
+    Returns:
+        {"consumed": int, "exhausted": int, "errors": int}
+    """
+    from django.utils import timezone
+    from django.db import transaction
+    from .models import CreditPool, CreditTransaction
+
+    try:
+        now = timezone.now()
+        stats = {"consumed": 0, "exhausted": 0, "errors": 0}
+
+        # CRIT-04 FIX: Find active pools with select_for_update to prevent race conditions
+        # when multiple workers or task overlap attempt to process the same pool
+        active_pools = list(CreditPool.objects.filter(
+            status=CreditPool.CreditPoolStatus.ACTIVE,
+            current_period_end__lte=now,
+        ).select_related("user", "product", "plan").select_for_update())
+
+        for pool in active_pools:
+            try:
+                with transaction.atomic():
+                    # Check if this is the first period (not yet activated)
+                    if not pool.current_period_start:
+                        # Activate the pool - first period starts now
+                        pool.current_period_start = now
+                        pool.current_period_end = now + timezone.timedelta(
+                            days=30 if pool.plan.billing_cycle == "monthly" else 365
+                        )
+                        pool.activated_at = now
+                        pool.save(update_fields=[
+                            "current_period_start", "current_period_end",
+                            "activated_at", "updated_at"
+                        ])
+                        continue
+
+                    # Consume one period
+                    pool.periods_consumed += 1
+                    periods_remaining = pool.credit_periods - pool.periods_consumed
+
+                    # Create transaction record
+                    CreditTransaction.objects.create(
+                        credit_pool=pool,
+                        action=CreditTransaction.TransactionType.PERIOD_CONSUME,
+                        periods_delta=-1,
+                        amount_cents_delta=0,
+                        periods_balance=periods_remaining,
+                        reason=f"Period {pool.periods_consumed} of {pool.credit_periods} consumed",
+                    )
+
+                    if periods_remaining <= 0:
+                        # Pool is exhausted
+                        pool.status = CreditPool.CreditPoolStatus.EXHAUSTED
+                        pool.current_period_start = None
+                        pool.current_period_end = None
+                        pool.save(update_fields=[
+                            "periods_consumed", "status",
+                            "current_period_start", "current_period_end",
+                            "updated_at"
+                        ])
+                        stats["exhausted"] += 1
+                        logger.info(
+                            f"CREDIT_CONSUME: Pool {pool.id} exhausted "
+                            f"(user={pool.user.email}, product={pool.product.slug})"
+                        )
+                    else:
+                        # Start next billing period
+                        pool.current_period_start = now
+                        pool.current_period_end = now + timezone.timedelta(
+                            days=30 if pool.plan.billing_cycle == "monthly" else 365
+                        )
+                        pool.save(update_fields=[
+                            "periods_consumed", "current_period_start",
+                            "current_period_end", "updated_at"
+                        ])
+                        stats["consumed"] += 1
+                        logger.info(
+                            f"CREDIT_CONSUME: Pool {pool.id} period consumed, "
+                            f"{periods_remaining} remaining (user={pool.user.email})"
+                        )
+
+            except Exception as e:
+                stats["errors"] += 1
+                logger.error(
+                    f"CREDIT_CONSUME: Error processing pool {pool.id}: {e}",
+                    exc_info=True,
+                )
+
+        logger.info(
+            f"Credit period consumption complete: "
+            f"{stats['consumed']} consumed, {stats['exhausted']} exhausted, "
+            f"{stats['errors']} errors"
+        )
+        return stats
+
+    except Exception as exc:
+        logger.error(f"Credit period consumption task failed: {exc}", exc_info=True)
+        raise self.retry(exc=exc)
+
+
+@shared_task(
+    bind=True,
+    max_retries=2,
+    default_retry_delay=600,
+)
+def expire_credit_pools(self):
+    """Periodic task to mark expired credit pools.
+
+    Called daily by Celery Beat. Finds active pools where expires_at
+    has passed and marks them as expired, regardless of remaining periods.
+
+    This handles the case where an admin sets a hard expiry date on a
+    credit pool (e.g., promotional credits that expire after 6 months).
+
+    Returns:
+        {"expired": int, "errors": int}
+    """
+    from django.utils import timezone
+    from django.db import transaction
+    from .models import CreditPool, CreditTransaction
+
+    try:
+        now = timezone.now()
+        stats = {"expired": 0, "errors": 0}
+
+        # Find active pools that have expired
+        expired_pools = CreditPool.objects.filter(
+            status=CreditPool.CreditPoolStatus.ACTIVE,
+            expires_at__lte=now,
+        ).select_related("user", "product", "plan")
+
+        for pool in expired_pools:
+            try:
+                with transaction.atomic():
+                    periods_remaining = pool.credit_periods - pool.periods_consumed
+
+                    # Create transaction record
+                    CreditTransaction.objects.create(
+                        credit_pool=pool,
+                        action=CreditTransaction.TransactionType.EXPIRE,
+                        periods_delta=-periods_remaining,
+                        amount_cents_delta=0,
+                        periods_balance=0,
+                        reason="Credit pool expired (hard expiry date reached)",
+                    )
+
+                    # Mark as expired
+                    pool.status = CreditPool.CreditPoolStatus.EXPIRED
+                    pool.save(update_fields=["status", "updated_at"])
+
+                    stats["expired"] += 1
+                    logger.info(
+                        f"CREDIT_EXPIRE: Pool {pool.id} expired "
+                        f"(user={pool.user.email}, {periods_remaining} periods lost)"
+                    )
+
+            except Exception as e:
+                stats["errors"] += 1
+                logger.error(
+                    f"CREDIT_EXPIRE: Error expiring pool {pool.id}: {e}",
+                    exc_info=True,
+                )
+
+        if stats["expired"] > 0:
+            logger.info(
+                f"Credit expiry complete: {stats['expired']} expired, "
+                f"{stats['errors']} errors"
+            )
+        return stats
+
+    except Exception as exc:
+        logger.error(f"Credit expiry task failed: {exc}", exc_info=True)
+        raise self.retry(exc=exc)

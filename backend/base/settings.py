@@ -24,6 +24,15 @@ environ.Env.read_env(os.path.join(BASE_DIR.parent, ".env"))
 SECRET_KEY = env("SB_SECRET_KEY")
 DEBUG = env.bool("SB_DEBUG", default=False)
 
+# Cryptography key for encrypted model fields (e.g., bank account numbers)
+# IMPORTANT: Set SB_CRYPTOGRAPHY_KEY in environment for production!
+# If not set, derives from SECRET_KEY (not recommended for production)
+CRYPTOGRAPHY_KEY = env("SB_CRYPTOGRAPHY_KEY", default=None)
+if CRYPTOGRAPHY_KEY is None:
+    # Derive a key from SECRET_KEY for development (32 bytes for AES-256)
+    import hashlib
+    CRYPTOGRAPHY_KEY = hashlib.sha256(SECRET_KEY.encode()).hexdigest()
+
 ALLOWED_HOSTS = env.list("SB_ALLOWED_HOSTS")
 
 
@@ -63,16 +72,23 @@ FRONTEND_URL = env("PUBLIC_SITE_URL_SB", default="http://localhost:4321").rstrip
 
 if DEBUG:
     FRONTEND_URL = "http://localhost:4321"
+    
+# CORS Configuration
+# ==================
+# HIGH-03 FIX: Cookie-based authentication requires specific origins in CORS headers.
+# The combination of Access-Control-Allow-Origin: * with Access-Control-Allow-Credentials: true
+# is rejected by browsers for security reasons. We must use specific origins when cookies are needed.
 
-CORS_ALLOW_ALL_ORIGINS = env("SB_CORS_ALLOW_ALL_ORIGINS", default=DEBUG, cast=bool)
+
+CORS_ALLOW_ALL_ORIGINS = False  # HIGH-03 FIX: Must be False for cookie-based auth to work
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = env.list(
     "SB_CORS_ALLOWED_ORIGINS",
     default=[
         "http://localhost:4321",
-        "http://localhost:8090",
+        "http://localhost:8086",
         "http://127.0.0.1:4321",
-        "http://127.0.0.1:8090",
+        "http://127.0.0.1:8086",
     ],
 )
 
@@ -103,9 +119,9 @@ CSRF_TRUSTED_ORIGINS = env.list(
     "SB_CSRF_TRUSTED_ORIGINS",
     default=[
         "http://localhost:4321",
-        "http://localhost:8090",
+        "http://localhost:8086",
         "http://127.0.0.1:4321",
-        "http://127.0.0.1:8090",
+        "http://127.0.0.1:8086",
     ],
 )
 

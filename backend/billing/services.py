@@ -220,17 +220,25 @@ class BillingService:
 
     @staticmethod
     async def aget_subscription_for_product(
-        user, product_slug: str
+        user, product_slug: str, select_for_update: bool = False
     ) -> Optional[Subscription]:
-        """Async version of get_subscription_for_product()."""
+        """Async version of get_subscription_for_product().
+        
+        Args:
+            user: The user to get subscription for
+            product_slug: The product slug
+            select_for_update: If True, lock the row for update (CRIT-03 FIX)
+        """
         product = await BillingService.aget_product_by_slug(product_slug)
         if not product:
             return None
 
         try:
-            sub = await Subscription.objects.select_related("plan", "product").aget(
-                user=user, product=product
-            )
+            qs = Subscription.objects.select_related("plan", "product")
+            # CRIT-03 FIX: Support select_for_update for race condition prevention
+            if select_for_update:
+                qs = qs.select_for_update()
+            sub = await qs.aget(user=user, product=product)
             return sub
         except Subscription.DoesNotExist:
             return None
@@ -828,6 +836,9 @@ class BillingService:
 
         Raises:
             ValueError: if plan price is 0 or amount is invalid.
+        
+        CRIT-10 FIX: Added verification that all objects were created successfully
+        to prevent partial state where pool exists without invoice.
         """
         from django.core.exceptions import ValidationError
 
@@ -861,8 +872,14 @@ class BillingService:
             expires_at=period_end,
         )
 
-        # Use the DB primary key (guaranteed unique) as the invoice number suffix
-        invoice_number = "SB-CRED-%05d" % pool.id
+        # CRIT-10 FIX: Verify pool was created successfully
+        if not pool.pk:
+            raise ValueError("Failed to create credit pool - rolling back transaction")
+
+        # LOW-12 FIX: Changed from %05d to %010d to support larger pool IDs
+        # The previous format limited to 99,999 pools; new format supports up to
+        # 9,999,999,999 pools which is sufficient for any scale.
+        invoice_number = "SB-CRED-%010d" % pool.id
         invoice = CreditInvoice.objects.create(
             credit_pool=pool,
             user=user,
@@ -880,6 +897,10 @@ class BillingService:
             notes=notes,
             issued_at=now,
         )
+
+        # CRIT-10 FIX: Verify invoice was created successfully
+        if not invoice.pk:
+            raise ValueError("Failed to create invoice - rolling back transaction")
 
         CreditTransaction.objects.create(
             credit_pool=pool,

@@ -63,6 +63,7 @@ import stripe
 from ninja import Query
 from ninja_extra import api_controller, http_get, http_post
 from django.http import HttpRequest
+from django.db import transaction
 from asgiref.sync import sync_to_async
 
 from common.exceptions import (
@@ -70,7 +71,7 @@ from common.exceptions import (
     BadRequestException,
     AccountNotActiveException,
 )
-from common.permissions import IsAuthenticated, IsServiceAuthenticated, IsAuthenticatedOrService
+from common.permissions import IsAuthenticated, IsServiceAuthenticated, IsAuthenticatedOrService, IsAdmin
 from common.schemas import MessageResponse, PaginatedResponse, PaginationInput
 from common.rate_limit import check_rate_limit_or_raise
 
@@ -78,7 +79,7 @@ from common.rate_limit import check_rate_limit_or_raise
 from users.controllers import JWTAuth
 
 # Credit system models — used by user-facing and admin endpoints
-from .models import Product, Plan, CreditPool, CreditInvoice, CreditTransaction, CreditPurchaseRequest
+from .models import Product, Plan, CreditPool, CreditInvoice, CreditTransaction, CreditPurchaseRequest, SubscriptionStatus, Subscription
 
 # Credit system schemas — used by user-facing and admin endpoints
 from .schemas import CreditRequestInputSchema
@@ -402,6 +403,38 @@ class BillingPublicController:
             "count": len(meta),
         }
 
+    @http_get(
+        "/bank-settings",
+        response={200: dict},
+        summary="Get active bank settings",
+        description="Fetch all active bank account details for manual credit payments.",
+    )
+    async def get_bank_settings(self, request: HttpRequest):
+        """Return all active bank accounts for manual credit purchases.
+        
+        CRIT-07 FIX: Mask account numbers to show only last 4 digits for security.
+        Full account numbers should only be visible to authenticated admins.
+        """
+        from .models import BankSettings
+
+        settings = []
+        async for bank in BankSettings.objects.filter(is_active=True).order_by("id"):
+            # CRIT-07 FIX: Mask account number - show only last 4 digits
+            account_num = bank.account_number or ""
+            masked_account = "****" + account_num[-4:] if len(account_num) >= 4 else "****"
+            
+            settings.append({
+                "id": bank.id,
+                "bank_name": bank.bank_name,
+                "account_holder_name": bank.account_holder_name,
+                "account_number": masked_account,  # Masked for security
+                "routing_number": bank.routing_number,  # Routing number is public info
+            })
+
+        if not settings:
+            return {"active": False, "banks": []}
+        return {"active": True, "banks": settings}
+
 
 # =============================================================================
 # Billing Protected Controller — Auth Me + Subscriptions
@@ -630,8 +663,8 @@ class BillingProtectedController:
         check_rate_limit_or_raise(request, "sync_subscriptions")
 
         logger.warning(
-            "[SYNC-DIAG] sync_subscriptions called for user %s (id=%s)",
-            request.user.email, request.user.id,
+            "[SYNC-DIAG] sync_subscriptions called for user_id=%s",
+            request.user.id,
         )
         try:
             subscriptions = await BillingService.async_sync_user_subscriptions_from_stripe(
@@ -641,11 +674,12 @@ class BillingProtectedController:
             logger.error(f"Failed to sync subscriptions: {e}", exc_info=True)
             raise BadRequestException("Failed to sync subscription state from Stripe.")
 
-        logger.warning(
-            "[SYNC-DIAG] sync_subscriptions result: %d subscriptions, "
-            "states=%s",
+        # MED-18 FIX: Reduced logging detail to avoid potential PII exposure
+        # Previously logged product slugs and full status - now just counts
+        logger.info(
+            "[SYNC-DIAG] sync_subscriptions completed: %d subscriptions synced for user_id=%s",
             len(subscriptions),
-            [(s.product.slug, s.status, s.cancel_at_period_end) for s in subscriptions],
+            request.user.id,
         )
 
         return [
@@ -781,41 +815,47 @@ class BillingProtectedController:
         3. If has Stripe sub → call reactivate_subscription_on_stripe()
         4. On Stripe success → update local DB
         5. If Stripe fails → raise error, DB untouched
+        
+        CRIT-03 FIX: Added select_for_update() to prevent race conditions when
+        multiple concurrent reactivation requests are made for the same subscription.
         """
         require_verified_email(request)
         check_rate_limit_or_raise(request, "reactivate_sub")
 
-        subscription = await BillingService.aget_subscription_for_product(
-            request.user, product_slug
-        )
-        if not subscription:
-            raise NotFoundException("No subscription found for this product.")
+        # CRIT-03 FIX: Use select_for_update within transaction to prevent race conditions
+        from django.db import transaction
+        async with transaction.atomic():
+            subscription = await BillingService.aget_subscription_for_product(
+                request.user, product_slug, select_for_update=True
+            )
+            if not subscription:
+                raise NotFoundException("No subscription found for this product.")
 
-        if subscription.status != "canceled":
-            raise BadRequestException("Only canceled subscriptions can be reactivated.")
+            if subscription.status != "canceled":
+                raise BadRequestException("Only canceled subscriptions can be reactivated.")
 
-        # CTR-13 Fix: Check if the billing period has already expired.
-        # After period_end, the Stripe subscription cannot be meaningfully
-        # reactivated — the customer would need to go through checkout again.
-        if subscription.current_period_end:
-            from django.utils import timezone as tz
-            if subscription.current_period_end < tz.now():
-                raise BadRequestException(
-                    "This subscription's billing period has expired. "
-                    "Please subscribe to a new plan."
-                )
+            # CTR-13 Fix: Check if the billing period has already expired.
+            # After period_end, the Stripe subscription cannot be meaningfully
+            # reactivated — the customer would need to go through checkout again.
+            if subscription.current_period_end:
+                from django.utils import timezone as tz
+                if subscription.current_period_end < tz.now():
+                    raise BadRequestException(
+                        "This subscription's billing period has expired. "
+                        "Please subscribe to a new plan."
+                    )
 
-        # ── Step 1: Stripe first ──────────────────────────────────────
-        if subscription.stripe_subscription_id:
-            try:
-                await sync_to_async(reactivate_subscription_on_stripe)(
-                    subscription, subscription.plan
-                )
-            except stripe.error.StripeError as e:
-                raise handle_stripe_error(e, context="reactivate_subscription")
+            # ── Step 1: Stripe first ──────────────────────────────────────
+            if subscription.stripe_subscription_id:
+                try:
+                    await sync_to_async(reactivate_subscription_on_stripe)(
+                        subscription, subscription.plan
+                    )
+                except stripe.error.StripeError as e:
+                    raise handle_stripe_error(e, context="reactivate_subscription")
 
-        # ── Step 2: DB update (only after Stripe confirms) ────────────
-        await BillingService.areactivate_subscription(subscription)
+            # ── Step 2: DB update (only after Stripe confirms) ────────────
+            await BillingService.areactivate_subscription(subscription)
 
         return MessageResponse(message="Subscription reactivated successfully.")
 
@@ -1014,75 +1054,140 @@ class BillingProtectedController:
         if not product:
             raise NotFoundException("Product not found.")
 
-        # --- Subscription state machine --------------------------------------
-        # Check the LIVE Stripe subscription (not local DB) to determine
-        # whether to reactivate, update, or create a new checkout.
-        sub = await BillingService.aget_subscription_for_product(
-            request.user, product_slug
-        )
-        should_reactivate = False
+        # --- HIGH-05: Race Condition Prevention --------------------------------
+        # Use select_for_update() within transaction.atomic() to prevent
+        # concurrent checkout requests from creating duplicate sessions or
+        # causing inconsistent state. The lock is held during the critical
+        # decision-making section and any Stripe reactivation operations.
+        from django.utils import timezone as tz
+        from django.conf import settings as django_settings
 
-        if sub and sub.stripe_subscription_id:
-            try:
-                # Fetch live Stripe sub (returns plain dict via client.py)
-                stripe_sub = await sync_to_async(retrieve_subscription)(
-                    sub.stripe_subscription_id
-                )
-
-                stripe_status = stripe_sub.get("status", "")
-                existing_currency = (stripe_sub.get("currency") or "usd").upper()
-
-                if stripe_status in ("active", "trialing"):
-                    # Stripe sub is live — reactivate/update, never create checkout
-                    should_reactivate = True
-                    logger.info(
-                        f"Live Stripe sub {sub.stripe_subscription_id} "
-                        f"(status={stripe_status}, currency={existing_currency})"
+        @sync_to_async
+        def _process_checkout_with_lock():
+            """Process checkout with row-level lock to prevent race conditions.
+            
+            Returns a tuple: (action, sub, checkout_data)
+            - action: 'reactivated', 'checkout', or 'error'
+            - sub: the subscription object (or None)
+            - checkout_data: dict with additional data for checkout path
+            """
+            with transaction.atomic():
+                # HIGH-05: Lock the subscription row to prevent concurrent operations
+                qs = Subscription.objects.select_related("plan", "product")
+                try:
+                    sub = qs.select_for_update().get(
+                        user=request.user, product=product
                     )
-            except stripe.InvalidRequestError:
-                # Stripe sub gone — clear stale reference
-                logger.info(f"Stripe sub {sub.stripe_subscription_id} no longer exists")
-                sub.stripe_subscription_id = None
-                await sync_to_async(sub.save)(update_fields=["stripe_subscription_id"])
+                except Subscription.DoesNotExist:
+                    sub = None
 
-        if should_reactivate:
-            # ── Stripe-first: reactivate on Stripe, then update DB ─────
-            try:
-                # Step 1: Stripe
-                await sync_to_async(reactivate_subscription_on_stripe)(sub, plan)
+                # --- Subscription state machine --------------------------------
+                # Check the LIVE Stripe subscription (not local DB) to determine
+                # whether to reactivate, update, or create a new checkout.
+                should_reactivate = False
+                stripe_sub_data = None
 
-                # Step 2: DB (only after Stripe confirms)
-                await BillingService.achange_subscription_plan(sub, plan)
+                if sub and sub.stripe_subscription_id:
+                    try:
+                        # Fetch live Stripe sub (returns plain dict via client.py)
+                        stripe_sub = retrieve_subscription(sub.stripe_subscription_id)
+                        stripe_sub_data = {
+                            "status": stripe_sub.get("status", ""),
+                            "currency": (stripe_sub.get("currency") or "usd").upper(),
+                        }
 
-                # Record ToS acceptance
-                from django.utils import timezone as tz
-                from django.conf import settings as django_settings
+                        stripe_status = stripe_sub_data["status"]
 
-                sub.tos_accepted_at = tz.now()
-                sub.tos_version = getattr(django_settings, "TOS_VERSION", "1.0")
-                await sync_to_async(sub.save)(
-                    update_fields=["tos_accepted_at", "tos_version", "updated_at"]
-                )
-                return {"checkout_url": None, "reactivated": True}
-            except (ValueError, stripe.error.StripeError) as e:
-                # CTR-12 Fix: Catch only ValueError (from business logic)
-                # and StripeError (from API calls) — NOT generic Exception.
-                # Previously, `(ValueError, Exception)` swallowed ALL errors
-                # including DB timeouts, connection errors, and programming
-                # bugs, masking them as "Unable to update your subscription".
-                logger.error(
-                    f"Reactivation failed for sub {sub.id}: {e}", exc_info=True
-                )
-                raise BadRequestException(
-                    "Unable to update your subscription. Contact support."
-                )
+                        if stripe_status in ("active", "trialing"):
+                            # Stripe sub is live — reactivate/update, never create checkout
+                            should_reactivate = True
+                            logger.info(
+                                f"Live Stripe sub {sub.stripe_subscription_id} "
+                                f"(status={stripe_status}, currency={stripe_sub_data['currency']})"
+                            )
+                    except stripe.InvalidRequestError:
+                        # Stripe sub gone — clear stale reference
+                        logger.info(f"Stripe sub {sub.stripe_subscription_id} no longer exists")
+                        sub.stripe_subscription_id = None
+                        sub.save(update_fields=["stripe_subscription_id"])
 
-        # --- New checkout (no existing Stripe sub) ----------------------------
-        # No DB update here — DB is activated later by confirm_checkout or webhook
+                if should_reactivate:
+                    # ── Stripe-first: reactivate on Stripe, then update DB ─────
+                    # Note: Stripe call happens inside the lock to prevent
+                    # double-reactivation from concurrent requests
+                    try:
+                        # Step 1: Stripe
+                        reactivate_subscription_on_stripe(sub, plan)
+
+                        # Step 2: DB (only after Stripe confirms)
+                        sub.plan = plan
+                        sub.status = SubscriptionStatus.ACTIVE
+                        sub.cancel_at_period_end = False
+                        sub.save(update_fields=["plan", "status", "cancel_at_period_end", "updated_at"])
+
+                        # Record ToS acceptance
+                        sub.tos_accepted_at = tz.now()
+                        sub.tos_version = getattr(django_settings, "TOS_VERSION", "1.0")
+                        sub.save(update_fields=["tos_accepted_at", "tos_version", "updated_at"])
+                        
+                        return ("reactivated", sub, None)
+                    except (ValueError, stripe.error.StripeError) as e:
+                        logger.error(
+                            f"Reactivation failed for sub {sub.id}: {e}", exc_info=True
+                        )
+                        return ("error", None, {"error": str(e)})
+
+                # --- New checkout (no existing Stripe sub) --------------------
+                # Determine trial: only once per product
+                trial_days = plan.trial_days if plan.trial_days > 0 else None
+                if sub and sub.has_used_trial:
+                    trial_days = None
+
+                trial_granted = trial_days is not None and trial_days > 0
+
+                # HIGH-06: Mark trial as used immediately when granted (inside lock)
+                # This prevents timing attacks where a user could sign up for
+                # multiple trials before the webhook sets the flag
+                if sub and trial_granted:
+                    sub.has_used_trial = True
+                    sub.tos_accepted_at = tz.now()
+                    sub.tos_version = getattr(django_settings, "TOS_VERSION", "1.0")
+                    sub.save(update_fields=["has_used_trial", "tos_accepted_at", "tos_version", "updated_at"])
+                elif sub:
+                    # Record ToS acceptance even without trial
+                    sub.tos_accepted_at = tz.now()
+                    sub.tos_version = getattr(django_settings, "TOS_VERSION", "1.0")
+                    sub.save(update_fields=["tos_accepted_at", "tos_version", "updated_at"])
+
+                # Return data needed for checkout creation (happens outside lock)
+                checkout_data = {
+                    "trial_days": trial_days,
+                    "trial_granted": trial_granted,
+                    "sub_currency": getattr(sub, "currency", None) if sub else None,
+                    "has_used_trial": sub.has_used_trial if sub else False,
+                }
+                return ("checkout", sub, checkout_data)
+
+        # Execute the locked operation
+        action, sub, checkout_data = await _process_checkout_with_lock()
+
+        # Handle results
+        if action == "reactivated":
+            return {"checkout_url": None, "reactivated": True}
+        elif action == "error":
+            raise BadRequestException(
+                "Unable to update your subscription. Contact support."
+            )
+
+        # --- New checkout (unlocked section) ---------------------------------
+        # The Stripe checkout session creation happens outside the lock
+        # because it's a longer operation and doesn't need to hold the DB lock.
+        # The trial flag has already been set atomically above.
+        
         # Determine currency: existing sub's locked currency > user pref > plan base
         user_currency = getattr(request.user, "currency", None) or plan.currency
-        if sub and getattr(sub, "currency", None):
-            user_currency = sub.currency
+        if checkout_data.get("sub_currency"):
+            user_currency = checkout_data["sub_currency"]
 
         # ── Currency lock check ──────────────────────────────────────────
         # A single Stripe Customer cannot mix currencies across subscriptions.
@@ -1105,10 +1210,7 @@ class BillingProtectedController:
                 f"before checking out, or cancel your existing subscription first."
             )
 
-        # Determine trial: only once per product
-        trial_days = plan.trial_days if plan.trial_days > 0 else None
-        if sub and sub.has_used_trial:
-            trial_days = None
+        trial_days = checkout_data["trial_days"]
 
         try:
             checkout_url = await sync_to_async(_create_checkout)(
@@ -1123,20 +1225,6 @@ class BillingProtectedController:
             raise BadRequestException(str(e))
         except stripe.error.StripeError as e:
             raise handle_stripe_error(e, context="create_checkout")
-
-        # Record ToS acceptance on the existing sub (if any)
-        sub = await BillingService.aget_subscription_for_product(
-            request.user, product_slug
-        )
-        if sub:
-            from django.utils import timezone as tz
-            from django.conf import settings as django_settings
-
-            sub.tos_accepted_at = tz.now()
-            sub.tos_version = getattr(django_settings, "TOS_VERSION", "1.0")
-            await sync_to_async(sub.save)(
-                update_fields=["tos_accepted_at", "tos_version", "updated_at"]
-            )
 
         return {"checkout_url": checkout_url}
 
@@ -1477,26 +1565,6 @@ class BillingProtectedController:
     # =========================================================================
 
     @http_get(
-        "/bank-settings",
-        response={200: dict},
-        summary="Get active bank settings",
-        description="Fetch bank account details for manual credit payments.",
-        auth=None,
-    )
-    async def get_bank_settings(self, request: HttpRequest):
-        from .models import BankSettings
-        settings = await BankSettings.objects.filter(is_active=True).afirst()
-        if not settings:
-            return {"active": False}
-        return {
-            "active": True,
-            "bank_name": settings.bank_name,
-            "account_holder_name": settings.account_holder_name,
-            "account_number": settings.account_number,
-            "routing_number": settings.routing_number,
-        }
-
-    @http_get(
         "/credits",
         response={200: list},
         summary="List my credit pools",
@@ -1506,6 +1574,8 @@ class BillingProtectedController:
         self,
         request: HttpRequest,
     ):
+        # HIGH-04: Require email verification for credit operations
+        require_verified_email(request)
         pools = [
             pool
             async for pool in CreditPool.objects.select_related(
@@ -1539,6 +1609,8 @@ class BillingProtectedController:
             for p in pools
         ]
 
+    # NOTE: /credits/invoices and /credits/request must come BEFORE /credits/{credit_id}
+    # Otherwise Django Ninja matches "invoices" or "request" as a credit_id parameter
     @http_get(
         "/credits/invoices",
         response={200: list},
@@ -1549,6 +1621,8 @@ class BillingProtectedController:
         self,
         request: HttpRequest,
     ):
+        # HIGH-04: Require email verification for credit operations
+        require_verified_email(request)
         invoices = [
             inv
             async for inv in CreditInvoice.objects.select_related(
@@ -1594,6 +1668,8 @@ class BillingProtectedController:
         request: HttpRequest,
         payload: CreditRequestInputSchema,
     ):
+        # HIGH-04: Require email verification for credit operations
+        require_verified_email(request)
         # Validate product + plan
         try:
             product = await Product.objects.aget(slug=payload.product_slug, is_active=True)
@@ -1605,6 +1681,19 @@ class BillingProtectedController:
         ).afirst()
         if not plan:
             raise NotFoundException("Plan '%s' not found." % payload.plan_slug)
+
+        # HIGH-12: Validate bank details against active BankSettings
+        from .models import BankSettings
+        active_bank = await BankSettings.objects.filter(
+            is_active=True,
+            bank_name=payload.bank_name,
+        ).afirst()
+        
+        if not active_bank:
+            raise BadRequestException(
+                f"Bank '{payload.bank_name}' is not recognized. "
+                "Please select a bank from the available options."
+            )
 
         credit_request = await CreditPurchaseRequest.objects.acreate(
             user=request.user,
@@ -1627,6 +1716,64 @@ class BillingProtectedController:
             "message": "Credit purchase request submitted. An admin will review your transaction.",
         }
 
+    @http_get(
+        "/credits/{credit_id}",
+        response={200: dict, 404: dict},
+        summary="Get credit pool detail",
+        description="Get full credit pool detail with transaction history for the authenticated user.",
+    )
+    async def get_my_credit_pool(
+        self,
+        request: HttpRequest,
+        credit_id: int,
+    ):
+        """Get credit pool details with transaction history for the authenticated user."""
+        # HIGH-04: Require email verification for credit operations
+        require_verified_email(request)
+        try:
+            pool = await CreditPool.objects.select_related(
+                "product", "plan"
+            ).aget(pk=credit_id, user=request.user)
+        except CreditPool.DoesNotExist:
+            raise NotFoundException("Credit pool not found.")
+
+        transactions = [
+            tx async for tx in pool.transactions.order_by("-created_at").all()
+        ]
+
+        return {
+            "id": pool.id,
+            "product_name": pool.product.name,
+            "plan_name": pool.plan.name,
+            "plan_slug": pool.plan.slug,
+            "display_amount": pool.display_amount,
+            "amount_cents": pool.amount_cents,
+            "currency": pool.currency,
+            "credit_periods": pool.credit_periods,
+            "periods_consumed": pool.periods_consumed,
+            "periods_remaining": pool.periods_remaining,
+            "source": pool.source,
+            "payment_reference": pool.payment_reference,
+            "status": pool.status,
+            "is_effectively_active": pool.is_effectively_active,
+            "current_period_start": pool.current_period_start,
+            "current_period_end": pool.current_period_end,
+            "expires_at": pool.expires_at,
+            "created_at": pool.created_at,
+            "transactions": [
+                {
+                    "id": tx.id,
+                    "action": tx.action,
+                    "periods_delta": tx.periods_delta,
+                    "amount_cents_delta": tx.amount_cents_delta,
+                    "periods_balance": tx.periods_balance,
+                    "reason": tx.reason,
+                    "created_at": tx.created_at,
+                }
+                for tx in transactions
+            ],
+        }
+
 
 # =============================================================================
 # Billing Admin Controller — Admin-only operations (F1)
@@ -1637,7 +1784,7 @@ class BillingProtectedController:
     "/billing/admin",
     tags=["Billing — Admin (Staff Only)"],
     auth=JWTAuth(),
-    permissions=[IsAuthenticated],
+    permissions=[IsAuthenticated, IsAdmin],  # HIGH-14: Added IsAdmin for defense-in-depth
 )
 class BillingAdminController:
     """Admin-only billing endpoints — staff/superuser access required.
@@ -1645,6 +1792,10 @@ class BillingAdminController:
     F1: Refunds are restricted to admin users to prevent financial fraud.
     Only authorized staff members can initiate refunds. Regular users
     must request refunds through support channels.
+    
+    HIGH-14: IsAdmin permission is checked at the controller level,
+    providing automatic staff verification before any method is called.
+    The _require_staff() method remains as an additional safety check.
     """
 
     # ── CTR-01: Class-level staff guard applied at every method ──────────

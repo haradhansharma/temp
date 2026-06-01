@@ -109,13 +109,19 @@ export function getCachedChoices(): Choices | null {
 // ─── Auth functions ─────────────────────────────────────────────────────────
 
 /**
- * Login — POST /auth/login → store tokens
- * @param payload.remember - If true, tokens persist in localStorage (30 days).
- *                          If false/omitted, tokens use sessionStorage (tab-only).
+ * Login — POST /auth/login → store access token in memory
+ *
+ * HIGH-03 FIX: The refresh token is now stored in an httpOnly cookie by the backend.
+ * The response body still contains both tokens for backwards compatibility with
+ * API clients, but we only store the access token in memory.
+ *
+ * @param payload.remember - If true, the cookie persists for 30 days.
+ *                          If false/omitted, the cookie is session-only.
  */
 export async function login(payload: LoginPayload): Promise<AuthTokens> {
   const data = await apiClient.post<AuthTokens>("/auth/login", payload);
-  authHelpers.setTokens(data.access, data.refresh, payload.remember ?? false);
+  // HIGH-03 FIX: Only store access token - refresh token is in httpOnly cookie
+  authHelpers.setAccessToken(data.access);
   return data;
 }
 
@@ -128,24 +134,22 @@ export async function register(payload: RegisterPayload): Promise<void> {
 
 /**
  * Logout — clear tokens and redirect
+ *
+ * HIGH-03 FIX: Uses the new cookie-based logout endpoint that:
+ * 1. Blacklists the refresh token from the httpOnly cookie
+ * 2. Clears the auth cookies
+ * We also clear the access token from memory.
  */
 export async function logout(): Promise<void> {
-  // Blacklist the refresh token server-side before clearing local state.
-  // If blacklisting fails (network error, etc.) we still clear locally.
+  // HIGH-03 FIX: Use cookie-based logout endpoint
+  // This blacklists the refresh token and clears cookies
   try {
-    const refreshToken = authHelpers.getRefreshToken();
-    if (refreshToken) {
-      await apiClient.post("/auth/token/blacklist", { refresh: refreshToken });
-    }
+    await apiClient.post("/auth/logout");
   } catch {
-    // Continue with local cleanup even if blacklist fails
+    // Continue with local cleanup even if API call fails
   }
-  try {
-    await apiClient.post("/users/me/logout");
-  } catch {
-    // Even if the API call fails, clear local tokens
-  }
-  authHelpers.clearTokens();
+  // Clear access token from memory
+  authHelpers.clearAuth();
   if (typeof window !== "undefined") {
     window.location.href = "/auth/login";
   }
@@ -334,15 +338,18 @@ export async function deleteAvatar(): Promise<UserProfile> {
  * the user to the Sattabase base domain with an authorization code.
  * The code is consumed upon use and cannot be reused.
  *
+ * HIGH-03 FIX: The refresh token is now stored in an httpOnly cookie by the backend.
+ * We only store the access token in memory.
+ *
  * POST /auth/token/exchange
  */
 export async function exchangeAuthCode(code: string): Promise<AuthTokens> {
   const data = await apiClient.post<AuthTokens>("/auth/token/exchange", {
     code,
   });
-  // Store the tokens (use sessionStorage by default for SSO callbacks;
-  // the user can upgrade to localStorage on next explicit login)
-  authHelpers.setTokens(data.access, data.refresh, false);
+  // HIGH-03 FIX: Only store access token - refresh token is in httpOnly cookie
+  // SSO always uses session cookies (not persistent) for security
+  authHelpers.setAccessToken(data.access);
   return data;
 }
 

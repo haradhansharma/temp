@@ -13,6 +13,7 @@ from django.utils.translation import gettext_lazy as _
 from django.conf import settings
 
 from common.models import TimeStampedModel
+from billing.fields import EncryptedCharField
 
 
 # =============================================================================
@@ -124,6 +125,15 @@ class ServiceDomain(TimeStampedModel):
         verbose_name = _("Service Domain")
         verbose_name_plural = _("Service Domains")
         ordering = ["-is_primary", "domain"]
+        # HIGH-16: Ensure only one primary domain per product
+        constraints = [
+            models.UniqueConstraint(
+                fields=["product"],
+                condition=models.Q(is_primary=True),
+                name="unique_primary_domain_per_product",
+                violation_error_message=_("Each product can have only one primary domain."),
+            ),
+        ]
 
     def __str__(self) -> str:
         return self.domain
@@ -193,9 +203,25 @@ class Product(TimeStampedModel):
         verbose_name = _("Product")
         verbose_name_plural = _("Products")
         ordering = ["name"]
+        # MED-21 FIX: Add unique constraint for non-null stripe_product_id
+        # This prevents duplicate Stripe product IDs while allowing multiple NULL values
+        constraints = [
+            models.UniqueConstraint(
+                fields=["stripe_product_id"],
+                name="unique_stripe_product_id",
+                condition=models.Q(stripe_product_id__isnull=False) & ~models.Q(stripe_product_id=""),
+            ),
+        ]
 
     def __str__(self) -> str:
         return self.name
+
+    def save(self, *args, **kwargs):
+        # MED-21 FIX: Normalize empty string to NULL for stripe_product_id
+        # This prevents duplicate empty strings and allows the unique constraint to work properly
+        if self.stripe_product_id == "":
+            self.stripe_product_id = None
+        super().save(*args, **kwargs)
 
     def get_primary_domain(self):
         """Return the primary domain for this product."""
@@ -405,8 +431,8 @@ class CreditPurchaseRequest(TimeStampedModel):
     # Bank details (submitted by user)
     bank_name = models.CharField(_("Bank Name"), max_length=100)
     account_holder_name = models.CharField(_("Account Holder Name"), max_length=200)
-    account_number = models.CharField(_("Account Number"), max_length=50)
-    routing_number = models.CharField(_("Routing Number"), max_length=50, blank=True, default="")
+    account_number = EncryptedCharField(_("Account Number"), max_length=50)
+    routing_number = EncryptedCharField(_("Routing Number"), max_length=50, blank=True, default="")
     transaction_reference = models.CharField(
         _("Transaction Reference"),
         max_length=255,
@@ -458,6 +484,15 @@ class CreditPurchaseRequest(TimeStampedModel):
         ordering = ["-created_at"]
         verbose_name = _("Credit Purchase Request")
         verbose_name_plural = _("Credit Purchase Requests")
+        # HIGH-11: Prevent duplicate credit requests with same transaction reference
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "transaction_reference"],
+                name="unique_user_transaction_reference",
+                condition=models.Q(transaction_reference__gt=""),
+                violation_error_message=_("You have already submitted a request with this transaction reference."),
+            ),
+        ]
 
     def __str__(self) -> str:
         return f"{self.user.email} → {self.amount_cents}c [{self.status}]"
@@ -473,8 +508,8 @@ class BankSettings(models.Model):
 
     bank_name = models.CharField(_("Bank Name"), max_length=100)
     account_holder_name = models.CharField(_("Account Holder Name"), max_length=200)
-    account_number = models.CharField(_("Account Number"), max_length=50)
-    routing_number = models.CharField(_("Routing/SWIFT Number"), max_length=50, blank=True)
+    account_number = EncryptedCharField(_("Account Number"), max_length=50)
+    routing_number = EncryptedCharField(_("Routing/SWIFT Number"), max_length=50, blank=True)
     is_active = models.BooleanField(_("Active"), default=True)
 
     class Meta:
@@ -483,7 +518,15 @@ class BankSettings(models.Model):
         verbose_name_plural = _("Bank Settings")
 
     def __str__(self) -> str:
-        return f"{self.bank_name} ({self.account_number})"
+        # Mask account number in string representation for security
+        masked = self.masked_account_number()
+        return f"{self.bank_name} ({masked})"
+
+    def masked_account_number(self) -> str:
+        """Return masked account number showing only last 4 digits."""
+        if self.account_number and len(self.account_number) > 4:
+            return f"****{self.account_number[-4:]}"
+        return "****"
 
 
 # =============================================================================
@@ -769,7 +812,9 @@ class Subscription(TimeStampedModel):
             SubscriptionStatus.PAST_DUE,
             SubscriptionStatus.CANCELED,
         ):
-            if self.current_period_end and self.current_period_end:
+            # CRIT-08 FIX: Changed from checking current_period_end twice to checking
+            # both current_period_start AND current_period_end for proper validation
+            if self.current_period_start and self.current_period_end:
                 from django.utils import timezone
 
                 return self.current_period_end > timezone.now()
@@ -810,7 +855,16 @@ class Subscription(TimeStampedModel):
         self.save(update_fields=["status", "canceled_at", "cancel_at_period_end", "updated_at"])
 
     def change_plan(self, new_plan):
-        """Switch to a different plan within the same product."""
+        """Switch to a different plan within the same product.
+        
+        HIGH-15: Validates that the new plan belongs to the same product.
+        """
+        # HIGH-15: Validate product match
+        if new_plan.product_id != self.product_id:
+            raise ValueError(
+                f"Cannot change to plan '{new_plan.slug}' - it belongs to a different product. "
+                f"Current product: {self.product.slug}, new plan's product: {new_plan.product.slug}"
+            )
         self.plan = new_plan
         # If the new plan has a trial and current status is trialing, keep it
         if self.status != SubscriptionStatus.TRIALING:
@@ -849,11 +903,13 @@ class Refund(TimeStampedModel):
     id = models.BigAutoField(primary_key=True)
     subscription = models.ForeignKey(
         Subscription,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,  # HIGH-17: Preserve audit trail when subscription is deleted
+        null=True,
+        blank=True,
         related_name="refunds",
         db_index=True,
         verbose_name=_("Subscription"),
-        help_text=_("The subscription this refund is for"),
+        help_text=_("The subscription this refund is for (nullable for audit trail preservation)"),
     )
     stripe_refund_id = models.CharField(
         _("Stripe Refund ID"),
@@ -1059,11 +1115,13 @@ class Invoice(TimeStampedModel):
     )
     subscription = models.ForeignKey(
         Subscription,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,  # HIGH-18: Preserve invoice history when subscription is deleted
+        null=True,
+        blank=True,
         related_name="invoices",
         db_index=True,
         verbose_name=_("Subscription"),
-        help_text=_("The subscription this invoice belongs to"),
+        help_text=_("The subscription this invoice belongs to (nullable for history preservation)"),
     )
     stripe_subscription_id = models.CharField(
         _("Stripe Subscription ID"),
@@ -1842,6 +1900,24 @@ class CreditPool(TimeStampedModel):
         ordering = ["-created_at"]
         verbose_name = _("Credit Pool")
         verbose_name_plural = _("Credit Pools")
+        # MED-07 FIX: Add composite indexes for common query patterns
+        indexes = [
+            # User's active pools (dashboard display)
+            models.Index(fields=["user", "status"], name="credit_pool_user_status_idx"),
+            # User's pools by product (product-specific queries)
+            models.Index(fields=["user", "product"], name="credit_pool_user_product_idx"),
+            # Active pools with period end (consumption task)
+            models.Index(fields=["status", "current_period_end"], name="credit_pool_status_period_idx"),
+            # Active pools by expiration (expiration check)
+            models.Index(fields=["status", "expires_at"], name="credit_pool_status_expires_idx"),
+        ]
+        # MED-22 FIX: Add constraint to prevent over-consumption of credit periods
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(periods_consumed__lte=models.F("credit_periods")),
+                name="periods_consumed_lte_credit_periods",
+            ),
+        ]
 
     def __str__(self) -> str:
         return f"{self.user.email} → {self.plan} ({self.status}, {self.periods_remaining}d)"
@@ -1886,9 +1962,12 @@ class CreditInvoice(TimeStampedModel):
         VOID = "void", _("Void")
 
     id = models.BigAutoField(primary_key=True)
+    # MED-23 FIX: Changed from CASCADE to SET_NULL to preserve invoice history
+    # when credit pool is deleted. This maintains audit trail for financial records.
     credit_pool = models.ForeignKey(
         CreditPool,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
+        null=True,
         related_name="invoices",
         db_index=True,
         verbose_name=_("Credit Pool"),

@@ -44,32 +44,14 @@ const billingNav: NavSection = {
       icon: "credits",
       tooltip: "View your prepaid credit pools and invoices",
     },
+    {
+      label: "Request Credits",
+      href: "/dashboard/billing/credits/request",
+      icon: "credit-card",
+      tooltip: "Purchase credits via bank transfer",
+    },
   ],
 };
-
-const adminNav: NavSection = {
-  title: "Admin",
-  items: [
-    {
-      label: "Admin Panel",
-      href: "/admin",
-      icon: "api-keys",
-      tooltip: "Admin dashboard — products, subscriptions, users, API keys",
-    },
-    {
-          label: "Credits",
-          href: "/admin/credits",
-          icon: "credits",
-          tooltip: "Manage credit pools and invoices",
-        },
-        {
-          label: "Credit Requests",
-          href: "/admin/credit-requests",
-          icon: "credit-card",
-          tooltip: "Review and approve credit purchase requests",
-        },
-      ],
-    };
 
 const currentPath = Astro.url.pathname;
 ---
@@ -295,6 +277,36 @@ const currentPath = Astro.url.pathname;
                     />
                   </svg>
                 )}
+                {item.icon === "credits" && (
+                  <svg
+                    class="nav-icon h-5 w-5 shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="1.5"
+                      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                )}
+                {item.icon === "credit-card" && (
+                  <svg
+                    class="nav-icon h-5 w-5 shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="1.5"
+                      d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                    />
+                  </svg>
+                )}
                 <span class="nav-label truncate">{item.label}</span>
 
                 {/* Badge */}
@@ -340,7 +352,7 @@ const currentPath = Astro.url.pathname;
       </div>
     </div>
 
-    <!-- Divider -->
+    <!-- Divider (Admin section - staff only) -->
     <div
       class="my-3 border-t border-border"
       data-admin-section
@@ -348,7 +360,7 @@ const currentPath = Astro.url.pathname;
     >
     </div>
 
-    <!-- Section: Admin (owner/admin only) -->
+    <!-- Section: Admin (staff only) - Single link to access admin dashboard -->
     <div
       class="nav-section"
       data-section="admin"
@@ -361,7 +373,7 @@ const currentPath = Astro.url.pathname;
         aria-expanded="true"
         data-section-toggle="admin"
       >
-        <span>{adminNav.title}</span>
+        <span>Admin</span>
         <svg
           class="section-chevron h-3.5 w-3.5 transition-transform duration-200 rotate-0"
           fill="none"
@@ -376,46 +388,26 @@ const currentPath = Astro.url.pathname;
         </svg>
       </button>
       <div class="section-items space-y-0.5 mt-1" data-section-items="admin">
-        {
-          adminNav.items.map((item) => {
-            const isActive =
-              currentPath === item.href ||
-              (item.href !== "/admin" && currentPath.startsWith(item.href));
-            return (
-              <a
-                href={item.href}
-                class:list={[
-                  "nav-item group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
-                  isActive
-                    ? "bg-brand-50 text-brand-700 dark:bg-brand-950/60 dark:text-brand-400"
-                    : "text-muted-foreground hover:bg-accent hover:text-foreground",
-                ]}
-                aria-current={isActive ? "page" : undefined}
-                {...(item.tooltip ? { "data-tooltip": item.tooltip } : {})}
-              >
-                {isActive && (
-                  <span class="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-[3px] rounded-r-full bg-brand-600 dark:bg-brand-500" />
-                )}
-                {item.icon === "api-keys" && (
-                  <svg
-                    class="nav-icon h-5 w-5 shrink-0"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="1.5"
-                      d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z"
-                    />
-                  </svg>
-                )}
-                <span class="nav-label truncate">{item.label}</span>
-              </a>
-            );
-          })
-        }
+        <a
+          href="/admin"
+          class="nav-item group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 text-muted-foreground hover:bg-accent hover:text-foreground"
+          data-tooltip="Access admin dashboard for products, subscriptions, users, and more"
+        >
+          <svg
+            class="nav-icon h-5 w-5 shrink-0"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.5"
+              d="M10.6 4.8a2 2 0 013.1 0l6.5 7.5a2 2 0 01-3.1 2.5l-1.1-1.3v5.5a2 2 0 01-4 0v-5.5l-1.1 1.3a2 2 0 01-3.1-2.5l6.5-7.5z"
+            ></path>
+          </svg>
+          <span class="nav-label truncate">Admin Panel</span>
+        </a>
       </div>
     </div>
   </nav>
@@ -693,25 +685,25 @@ const currentPath = Astro.url.pathname;
     }
 
     // ── Role-based admin section visibility ──
-    // Fetches user profile and shows the Admin nav section for owner/admin roles.
+    // Shows the Admin nav section for staff users (is_staff or owner/admin role).
     // The section is hidden by default (style="display:none") and only revealed
-    // if the authenticated user has an admin role or is_staff (superuser).
+    // if the authenticated user has staff privileges.
     async function checkAdminVisibility() {
       try {
         const { apiClient } = await import("@/lib/api");
         const user = await apiClient.get<{ role: string; is_staff: boolean }>(
           "/users/me",
         );
-        const isAdmin =
+        const isStaff =
           user.is_staff === true ||
           user.role === "owner" ||
           user.role === "admin";
         const adminElements = document.querySelectorAll("[data-admin-section]");
         adminElements.forEach((el) => {
-          (el as HTMLElement).style.display = isAdmin ? "" : "none";
+          (el as HTMLElement).style.display = isStaff ? "" : "none";
         });
-        // Also initialize section collapse for the admin section if visible
-        if (isAdmin) {
+        // Initialize section collapse for the admin section if visible
+        if (isStaff) {
           const adminItems = document.querySelector(
             "[data-section-items='admin']",
           ) as HTMLElement;

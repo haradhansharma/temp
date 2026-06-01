@@ -23,6 +23,7 @@ cryptography==47.0.0
 daphne==4.2.1
 Django==5.2.13
 django-admin-interface==0.32.0
+django-appconf==1.2.0
 django-cache-cleaner==0.2.0
 django-celery-beat==2.9.0
 django-colorfield==0.14.0
@@ -61,8 +62,9 @@ python-dateutil==2.9.0.post0
 python-dotenv==1.2.2
 python-slugify==8.0.4
 redis==7.4.0
+reportlab==4.5.1
 requests==2.33.1
-sattabase-sdk @ file:///home/haradhan/workspace/sattabase/sdk/python
+sattabase-sdk @ file:///home/haradhansharma/projects/sattalbase/sdk/python
 service-identity==24.2.0
 six==1.17.0
 sqlparse==0.5.5

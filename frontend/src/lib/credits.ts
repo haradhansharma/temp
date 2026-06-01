@@ -70,8 +70,9 @@ export interface CreditPurchaseResponse {
 }
 
 export interface PaginationMeta {
-  total: number;
-  page: number;
+  total_items: number;
+  total_pages: number;
+  current_page: number;
   page_size: number;
   has_next: boolean;
   has_previous: boolean;
@@ -160,6 +161,14 @@ export const creditsApi = {
     return apiClient.get<CreditPool[]>("/billing/credits");
   },
 
+  async getMyCreditPool(
+    creditId: number,
+  ): Promise<CreditPool & { transactions: CreditTransaction[] }> {
+    return apiClient.get<CreditPool & { transactions: CreditTransaction[] }>(
+      `/billing/credits/${creditId}`,
+    );
+  },
+
   async getMyCreditInvoices(): Promise<CreditInvoice[]> {
     return apiClient.get<CreditInvoice[]>("/billing/credits/invoices");
   },
@@ -174,32 +183,47 @@ export const creditsApi = {
     product_id?: number;
     search?: string;
   }): Promise<PaginatedResponse<CreditPool>> {
-    return apiClient.get<PaginatedResponse<CreditPool>>("/admin/credits", { params });
+    return apiClient.get<PaginatedResponse<CreditPool>>("/admin/credits", {
+      params,
+    });
   },
 
-  async adminGetCreditPool(creditId: number): Promise<CreditPool & { transactions: CreditTransaction[] }> {
+  async adminGetCreditPool(
+    creditId: number,
+  ): Promise<CreditPool & { transactions: CreditTransaction[] }> {
     return apiClient.get<CreditPool & { transactions: CreditTransaction[] }>(
-      `/admin/credits/${creditId}`
+      `/admin/credits/${creditId}`,
     );
   },
 
   async adminPurchaseCredit(
-    payload: AdminCreditPurchasePayload
+    payload: AdminCreditPurchasePayload,
   ): Promise<CreditPurchaseResponse> {
     return apiClient.post<CreditPurchaseResponse>("/admin/credits", payload);
   },
 
   async adminRefundCredit(
     creditId: number,
-    payload: AdminCreditRefundPayload
-  ): Promise<{ id: number; status: string; periods_remaining: number; message: string }> {
+    payload: AdminCreditRefundPayload,
+  ): Promise<{
+    id: number;
+    status: string;
+    periods_remaining: number;
+    message: string;
+  }> {
     return apiClient.post(`/admin/credits/${creditId}/refund`, payload);
   },
 
   async adminAdjustCredit(
     creditId: number,
-    payload: AdminCreditAdjustPayload
-  ): Promise<{ id: number; credit_periods: number; periods_remaining: number; status: string; message: string }> {
+    payload: AdminCreditAdjustPayload,
+  ): Promise<{
+    id: number;
+    credit_periods: number;
+    periods_remaining: number;
+    status: string;
+    message: string;
+  }> {
     return apiClient.post(`/admin/credits/${creditId}/adjust`, payload);
   },
 
@@ -209,17 +233,29 @@ export const creditsApi = {
     status?: string;
     search?: string;
   }): Promise<PaginatedResponse<CreditInvoice>> {
-    return apiClient.get<PaginatedResponse<CreditInvoice>>("/admin/credit-invoices", {
-      params,
-    });
+    return apiClient.get<PaginatedResponse<CreditInvoice>>(
+      "/admin/credit-invoices",
+      {
+        params,
+      },
+    );
   },
 
-  async adminGetCreditInvoice(
-    invoiceNumber: string
-  ): Promise<CreditInvoice> {
+  async adminGetCreditInvoice(invoiceNumber: string): Promise<CreditInvoice> {
     return apiClient.get<CreditInvoice>(
-      `/admin/credit-invoices/${invoiceNumber}`
+      `/admin/credit-invoices/${invoiceNumber}`,
     );
+  },
+
+  getCreditInvoicePdfUrl(invoiceNumber: string): string {
+    // Returns the URL for downloading the invoice PDF
+    // The browser will handle the download directly
+    const baseUrl =
+      import.meta.env.PUBLIC_API_BASE_URL || "http://localhost:8086/api/v1";
+    const token =
+      sessionStorage.getItem("auth_access_token") ||
+      localStorage.getItem("auth_access_token");
+    return `${baseUrl}/admin/credit-invoices/${invoiceNumber}/pdf?token=${token}`;
   },
 
   // ── Credit Request API Functions ────────────────────────────────────────────
@@ -229,15 +265,39 @@ export const creditsApi = {
   },
 
   async getPlans(productSlug: string): Promise<Plan[]> {
-    return apiClient.get<Plan[]>(`/billing/plans/${productSlug}`);
+    return apiClient.get<Plan[]>(`/billing/products/${productSlug}/plans`);
+  },
+
+  // User-facing bank settings (public endpoint, no auth required)
+  // Returns ALL active bank accounts
+  async getBankSettings(): Promise<{
+    active: boolean;
+    banks: Array<{
+      id: number;
+      bank_name: string;
+      account_holder_name: string;
+      account_number: string;
+      routing_number: string;
+    }>;
+  }> {
+    return apiClient.get<{
+      active: boolean;
+      banks: Array<{
+        id: number;
+        bank_name: string;
+        account_holder_name: string;
+        account_number: string;
+        routing_number: string;
+      }>;
+    }>("/billing/bank-settings");
   },
 
   async requestCreditPurchase(
-    payload: CreditRequestInputSchema
+    payload: CreditRequestInputSchema,
   ): Promise<{ id: number; status: string; message: string }> {
     return apiClient.post<{ id: number; status: string; message: string }>(
       "/billing/credits/request",
-      payload
+      payload,
     );
   },
 
@@ -249,7 +309,7 @@ export const creditsApi = {
   }): Promise<{ meta: PaginationMeta; results: CreditRequest[] }> {
     return apiClient.get<{ meta: PaginationMeta; results: CreditRequest[] }>(
       "/admin/credit-requests",
-      { params }
+      { params },
     );
   },
 
@@ -258,21 +318,130 @@ export const creditsApi = {
   },
 
   async adminApproveCreditRequest(
-    requestId: number
-  ): Promise<{ id: number; status: string; credit_pool_id: number; invoice_number: string; message: string }> {
-    return apiClient.post(
-      `/admin/credit-requests/${requestId}/approve`,
-      {}
-    );
+    requestId: number,
+  ): Promise<{
+    id: number;
+    status: string;
+    credit_pool_id: number;
+    invoice_number: string;
+    message: string;
+  }> {
+    return apiClient.post(`/admin/credit-requests/${requestId}/approve`, {});
   },
 
   async adminRejectCreditRequest(
     requestId: number,
-    reason: string
+    reason: string,
   ): Promise<{ id: number; status: string; message: string }> {
-    return apiClient.post(
-      `/admin/credit-requests/${requestId}/reject`,
-      { reason }
-    );
+    return apiClient.post(`/admin/credit-requests/${requestId}/reject`, {
+      reason,
+    });
+  },
+
+  // ── Admin Bank Settings API Functions ───────────────────────────────────────
+
+  async adminListBankSettings(): Promise<{
+    banks: Array<{
+      id: number;
+      bank_name: string;
+      account_holder_name: string;
+      account_number: string;
+      routing_number: string;
+      is_active: boolean;
+    }>;
+    count: number;
+  }> {
+    return apiClient.get("/admin/bank-settings");
+  },
+
+  async createBankSettings(payload: {
+    bank_name: string;
+    account_holder_name: string;
+    account_number: string;
+    routing_number?: string;
+    is_active?: boolean;
+  }): Promise<{
+    id: number;
+    bank_name: string;
+    account_holder_name: string;
+    account_number: string;
+    routing_number: string;
+    is_active: boolean;
+    message: string;
+  }> {
+    return apiClient.post("/admin/bank-settings", payload);
+  },
+
+  async updateBankSettings(
+    settingsId: number,
+    payload: {
+      bank_name: string;
+      account_holder_name: string;
+      account_number: string;
+      routing_number?: string;
+      is_active?: boolean;
+    },
+  ): Promise<{
+    id: number;
+    bank_name: string;
+    account_holder_name: string;
+    account_number: string;
+    routing_number: string;
+    is_active: boolean;
+    message: string;
+  }> {
+    return apiClient.put(`/admin/bank-settings/${settingsId}`, payload);
+  },
+
+  async toggleBankSettings(settingsId: number): Promise<{
+    id: number;
+    bank_name: string;
+    is_active: boolean;
+    message: string;
+  }> {
+    return apiClient.patch(`/admin/bank-settings/${settingsId}/toggle`, {});
+  },
+
+  async deleteBankSettings(settingsId: number): Promise<{
+    message: string;
+  }> {
+    return apiClient.delete(`/admin/bank-settings/${settingsId}`);
+  },
+
+  // Legacy aliases for backward compatibility
+  async adminGetBankSettings(): Promise<{
+    banks: Array<{
+      id: number;
+      bank_name: string;
+      account_holder_name: string;
+      account_number: string;
+      routing_number: string;
+      is_active: boolean;
+    }>;
+    count: number;
+  }> {
+    return this.adminListBankSettings();
+  },
+
+  async saveBankSettings(payload: {
+    bank_name: string;
+    account_holder_name: string;
+    account_number: string;
+    routing_number?: string;
+    is_active?: boolean;
+    settings_id?: number;
+  }): Promise<{
+    id: number;
+    bank_name: string;
+    account_holder_name: string;
+    account_number: string;
+    routing_number: string;
+    is_active: boolean;
+    message: string;
+  }> {
+    if (payload.settings_id) {
+      return this.updateBankSettings(payload.settings_id, payload);
+    }
+    return this.createBankSettings(payload);
   },
 };

@@ -62,10 +62,10 @@ class CustomUserManager(BaseUserManager):
     def get_by_natural_key(self, email):
         """Allow authentication by email as the natural key.
 
-        Note: Excludes soft-deleted users to prevent authentication
+        MED-05 FIX: Also checks is_active to prevent authentication
         of deactivated accounts.
         """
-        return self.get(email=email, is_deleted=False)
+        return self.get(email=email, is_deleted=False, is_active=True)
 
     def email_exists(self, email: str) -> bool:
         """Check if a user with the given email exists (including non-active)."""
@@ -115,8 +115,12 @@ class CustomUserManager(BaseUserManager):
         return await self.acreate_user(email, password, **extra_fields)
 
     async def aget_by_natural_key(self, email):
-        """Async version of get_by_natural_key()."""
-        return await self.aget(email=email, is_deleted=False)
+        """Async version of get_by_natural_key().
+        
+        MED-05 FIX: Also checks is_active to prevent authentication
+        of deactivated accounts.
+        """
+        return await self.aget(email=email, is_deleted=False, is_active=True)
 
     async def aemail_exists(self, email: str) -> bool:
         """Async version of email_exists()."""

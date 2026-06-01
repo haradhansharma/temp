@@ -257,6 +257,19 @@ class User(AbstractUser, TimeStampedModel, SoftDeleteModel):
     last_login_ip = models.GenericIPAddressField(
         _("Last Login IP"), null=True, blank=True
     )
+    
+    # CRIT-02 FIX: Account lockout fields for brute force protection
+    failed_login_attempts = models.PositiveIntegerField(
+        _("Failed Login Attempts"),
+        default=0,
+        help_text=_("Number of consecutive failed login attempts. Reset on successful login.")
+    )
+    locked_until = models.DateTimeField(
+        _("Locked Until"),
+        null=True,
+        blank=True,
+        help_text=_("If set, account is temporarily locked until this time.")
+    )
 
     # --- SaaS / Tenant fields (foundation for future) ---
     # --- SaaS / Tenant fields (foundation for future) ---
@@ -296,6 +309,45 @@ class User(AbstractUser, TimeStampedModel, SoftDeleteModel):
     def display_name(self) -> str:
         """Return the user's display name (first name or email prefix)."""
         return self.first_name.strip() or self.email.split("@")[0]
+
+    def is_account_locked(self) -> bool:
+        """CRIT-02 FIX: Check if account is currently locked due to failed login attempts.
+        
+        Returns:
+            True if the account is locked, False otherwise.
+        """
+        if not self.locked_until:
+            return False
+        from django.utils import timezone
+        return self.locked_until > timezone.now()
+
+    def increment_failed_login(self, max_attempts: int = 5, lockout_minutes: int = 30) -> None:
+        """CRIT-02 FIX: Increment failed login attempts and lock account if threshold exceeded.
+        
+        Args:
+            max_attempts: Maximum failed attempts before lockout (default: 5)
+            lockout_minutes: Lockout duration in minutes (default: 30)
+        """
+        from django.utils import timezone
+        import datetime
+        
+        self.failed_login_attempts += 1
+        
+        if self.failed_login_attempts >= max_attempts:
+            self.locked_until = timezone.now() + datetime.timedelta(minutes=lockout_minutes)
+            logger.warning(
+                f"ACCOUNT_LOCKED: user={self.email}, attempts={self.failed_login_attempts}, "
+                f"locked_until={self.locked_until}"
+            )
+        
+        self.save(update_fields=["failed_login_attempts", "locked_until", "updated_at"])
+
+    def reset_failed_login_attempts(self) -> None:
+        """CRIT-02 FIX: Reset failed login attempts counter on successful login."""
+        if self.failed_login_attempts > 0 or self.locked_until:
+            self.failed_login_attempts = 0
+            self.locked_until = None
+            self.save(update_fields=["failed_login_attempts", "locked_until", "updated_at"])
 
 
 # =============================================================================

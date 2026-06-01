@@ -650,11 +650,22 @@ class CreditTransactionListResponse(Schema):
 
 
 class CreditRequestInputSchema(Schema):
-    """Schema for a user submitting a credit purchase request."""
+    """Schema for a user submitting a credit purchase request.
+    
+    LOW-07 FIX: Added maximum limit to prevent excessively large credit purchases.
+    Maximum is set to 10,000,000 cents ($100,000) which should cover most legitimate
+    use cases while preventing accidental or malicious extreme values.
+    """
 
     product_slug: str = Field(..., description="Product slug")
     plan_slug: str = Field(..., description="Plan slug")
-    amount_cents: int = Field(..., ge=100, description="Amount in cents (min 100 = $1.00)")
+    # LOW-07 FIX: Added maximum limit (10,000,000 cents = $100,000)
+    amount_cents: int = Field(
+        ...,
+        ge=100,
+        le=10_000_000,
+        description="Amount in cents (min 100 = $1.00, max 10,000,000 = $100,000)"
+    )
     currency: str = Field("USD", max_length=3)
     bank_name: str = Field(..., max_length=100, description="Name of the bank")
     account_holder_name: str = Field(..., max_length=200, description="Account holder full name")

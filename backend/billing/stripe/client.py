@@ -423,6 +423,26 @@ def retrieve_invoice(invoice_id: str) -> dict:
 
 
 # ---------------------------------------------------------------------------
+# Balance Transactions
+# ---------------------------------------------------------------------------
+
+
+def retrieve_balance_transaction(bt_id: str) -> dict:
+    """Retrieve a Stripe BalanceTransaction and return as plain dict.
+    
+    LOW-11 FIX: Added centralized function for retrieving balance transactions
+    to avoid direct stripe imports in webhook handlers. This ensures consistent
+    error handling and API key management across the codebase.
+    """
+    try:
+        bt = stripe.BalanceTransaction.retrieve(bt_id, api_key=get_api_key())
+        return to_dict(bt)
+    except stripe.error.StripeError as e:
+        logger.error(f"retrieve_balance_transaction failed: {e}")
+        raise
+
+
+# ---------------------------------------------------------------------------
 # Webhooks
 # ---------------------------------------------------------------------------
 

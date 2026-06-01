@@ -31,6 +31,7 @@ from asgiref.sync import sync_to_async
 from ninja_extra import api_controller, http_post, http_get, http_put, http_delete
 from ninja.security import HttpBearer
 from ninja_jwt.tokens import AccessToken, RefreshToken
+from ninja_jwt.exceptions import TokenError
 from ninja import UploadedFile, File
 from django.http import HttpRequest
 from django.conf import settings
@@ -67,6 +68,8 @@ from .schemas import (
     EmailVerifyConfirmSchema,
     ChangeEmailConfirmOTPSchema,
     ChoicesSchema,
+    AccessTokenOnlySchema,
+    CookieRefreshInputSchema,
 )
 from .services import AuthService, UserService
 from .models import (
@@ -85,6 +88,82 @@ async_token_for_user = sync_to_async(AccessToken.for_user)
 async_refresh_for_user = sync_to_async(RefreshToken.for_user)
 async_decode_refresh = sync_to_async(lambda t: RefreshToken(t))
 async_blacklist = sync_to_async(lambda r: r.blacklist())
+
+
+# =============================================================================
+# HIGH-03 FIX: Cookie-based Authentication (XSS Protection)
+# =============================================================================
+
+# Cookie names for refresh token storage
+REFRESH_TOKEN_COOKIE_NAME = "sb_refresh_token"
+REMEMBER_ME_COOKIE_NAME = "sb_remember_me"
+
+# Cookie expiration times
+REFRESH_COOKIE_EXPIRY_DAYS = 30  # When "remember me" is true
+
+
+def _set_auth_cookie(response, refresh_token: str, remember: bool = False) -> None:
+    """Set refresh token in httpOnly cookie for XSS protection.
+    
+    HIGH-03 FIX: Stores refresh token in httpOnly cookie instead of
+    localStorage/sessionStorage. This prevents XSS attacks from stealing
+    the refresh token.
+    
+    Args:
+        response: Django HttpResponse object
+        refresh_token: The refresh token to store
+        remember: If True, cookie persists for 30 days; otherwise session cookie
+    """
+    # Determine cookie settings
+    secure = not settings.DEBUG  # HTTPS only in production
+    samesite = "Lax"  # Protection against CSRF while allowing normal navigation
+    
+    # Set refresh token cookie
+    if remember:
+        from django.utils import timezone
+        from datetime import timedelta
+        expires = timezone.now() + timedelta(days=REFRESH_COOKIE_EXPIRY_DAYS)
+        response.set_cookie(
+            REFRESH_TOKEN_COOKIE_NAME,
+            refresh_token,
+            expires=expires,
+            httponly=True,
+            secure=secure,
+            samesite=samesite,
+            path="/",
+        )
+        # Set a flag cookie to indicate remember me is enabled
+        # This is NOT httpOnly so frontend can read it
+        response.set_cookie(
+            REMEMBER_ME_COOKIE_NAME,
+            "true",
+            expires=expires,
+            httponly=False,  # Readable by frontend
+            secure=secure,
+            samesite=samesite,
+            path="/",
+        )
+    else:
+        # Session cookie - expires when browser closes
+        response.set_cookie(
+            REFRESH_TOKEN_COOKIE_NAME,
+            refresh_token,
+            httponly=True,
+            secure=secure,
+            samesite=samesite,
+            path="/",
+        )
+        # Clear remember me flag
+        response.delete_cookie(REMEMBER_ME_COOKIE_NAME, path="/")
+
+
+def _clear_auth_cookie(response) -> None:
+    """Clear the refresh token cookie on logout.
+    
+    HIGH-03 FIX: Removes the httpOnly cookie containing refresh token.
+    """
+    response.delete_cookie(REFRESH_TOKEN_COOKIE_NAME, path="/")
+    response.delete_cookie(REMEMBER_ME_COOKIE_NAME, path="/")
 
 
 # =============================================================================
@@ -115,7 +194,8 @@ class JWTAuth(HttpBearer):
                 return user
             return None
         except Exception as e:
-            logger.debug(f"JWT auth failed: {e}")
+            # LOW-01 FIX: Log auth failures at WARNING level for security monitoring
+            logger.warning(f"JWT auth failed: {e}")
             return None
 
 
@@ -214,7 +294,12 @@ class AuthController:
         description="Authenticate with email/password and receive JWT tokens.",
     )
     async def login(self, request: HttpRequest, payload: LoginInputSchema):
-        """Authenticate and return JWT access + refresh tokens."""
+        """Authenticate and return JWT access + refresh tokens.
+        
+        HIGH-03 FIX: Also sets refresh token in httpOnly cookie for XSS protection.
+        The response body still contains both tokens for backwards compatibility
+        with API clients and SSO flows.
+        """
         check_rate_limit_or_raise(
             request,
             "login",
@@ -239,7 +324,15 @@ class AuthController:
             except Exception as e:
                 logger.warning(f"Failed to record login history: {e}")
 
-            return TokenOutputSchema(access=str(access), refresh=str(refresh))
+            # HIGH-03 FIX: Set refresh token in httpOnly cookie
+            # The remember flag controls whether the cookie persists (30 days) or is session-only
+            from django.http import JsonResponse
+            
+            response_data = TokenOutputSchema(access=str(access), refresh=str(refresh))
+            response = JsonResponse(response_data.dict())
+            _set_auth_cookie(response, str(refresh), remember=payload.remember)
+            
+            return response
 
         except ValueError as e:
             msg = str(e)
@@ -254,7 +347,12 @@ class AuthController:
         description="Exchange a valid refresh token for a new access token pair.",
     )
     async def refresh_token(self, payload: TokenRefreshInputSchema):
-        """Exchange a refresh token for a new token pair."""
+        """Exchange a refresh token for a new token pair.
+        
+        CRIT-01 FIX: Blacklist the old refresh token before issuing new ones.
+        This prevents token reuse attacks where stolen refresh tokens could be
+        used multiple times.
+        """
         try:
             refresh = await async_decode_refresh(payload.refresh)
 
@@ -268,14 +366,100 @@ class AuthController:
             if not user:
                 raise ValueError("User not found or inactive")
 
+            # CRIT-01 FIX: Blacklist the OLD refresh token before issuing new ones
+            # This prevents the old token from being used again (token rotation security)
+            await async_blacklist(refresh)
+
             new_access = await async_token_for_user(user)
             new_refresh = await async_refresh_for_user(user)
 
             return TokenOutputSchema(access=str(new_access), refresh=str(new_refresh))
 
-        except ValueError as e:
+        except (ValueError, TokenError) as e:
+            error_msg = str(e)
+            
+            # MED-02 FIX: Detect refresh token reuse (potential security breach)
+            if "blacklisted" in error_msg.lower():
+                logger.warning(
+                    f"SECURITY_ALERT: Refresh token reuse detected in body-based refresh! "
+                    f"Possible token theft attempt. Error: {error_msg}"
+                )
+            
             logger.debug(f"Token refresh failed: {e}")
             raise UnauthorizedException("Invalid or expired refresh token.")
+
+    @http_post(
+        "/token/refresh-cookie",
+        response={200: AccessTokenOnlySchema, 401: dict},
+        summary="Refresh access token using cookie",
+        description=(
+            "Refresh access token using the refresh token from httpOnly cookie. "
+            "HIGH-03 FIX: This endpoint is the preferred way to refresh tokens "
+            "for browser clients as it uses cookie-based auth for XSS protection."
+        ),
+    )
+    async def refresh_token_cookie(self, request: HttpRequest, payload: CookieRefreshInputSchema):
+        """Refresh access token using cookie-based refresh token.
+        
+        HIGH-03 FIX: Reads refresh token from httpOnly cookie instead of request body.
+        This is more secure because the cookie cannot be accessed by JavaScript,
+        protecting against XSS attacks.
+        """
+        from django.http import JsonResponse
+        
+        # Get refresh token from cookie
+        refresh_token = request.COOKIES.get(REFRESH_TOKEN_COOKIE_NAME)
+        if not refresh_token:
+            raise UnauthorizedException("No refresh token cookie found.")
+
+        try:
+            refresh = await async_decode_refresh(refresh_token)
+
+            user_id = refresh.get("user_id")
+            if not user_id:
+                raise ValueError("Invalid token payload")
+
+            user = await User.objects.filter(
+                id=user_id, is_active=True, is_deleted=False
+            ).afirst()
+            if not user:
+                raise ValueError("User not found or inactive")
+
+            # CRIT-01 FIX: Blacklist the OLD refresh token before issuing new ones
+            await async_blacklist(refresh)
+
+            new_access = await async_token_for_user(user)
+            new_refresh = await async_refresh_for_user(user)
+
+            # Check if "remember me" was enabled (cookie persists)
+            remember_me = request.COOKIES.get(REMEMBER_ME_COOKIE_NAME) == "true"
+
+            # Return access token and set new refresh token cookie
+            response_data = AccessTokenOnlySchema(access=str(new_access))
+            response = JsonResponse(response_data.dict())
+            _set_auth_cookie(response, str(new_refresh), remember=remember_me)
+
+            return response
+
+        except (ValueError, TokenError) as e:
+            error_msg = str(e)
+            
+            # MED-02 FIX: Detect refresh token reuse (potential security breach)
+            # If the token is blacklisted, it means it was already used - possible token theft
+            if "blacklisted" in error_msg.lower():
+                logger.warning(
+                    f"SECURITY_ALERT: Refresh token reuse detected! "
+                    f"Possible token theft attempt. Error: {error_msg}"
+                )
+                # Note: We could invalidate all user tokens here, but since we don't have
+                # the user_id from the blacklisted token, we just clear cookies.
+                # Consider implementing a token family tracking system for higher security.
+            
+            logger.debug(f"Cookie token refresh failed: {e}")
+            # Clear the invalid/blacklisted cookie so subsequent requests don't fail
+            response = JsonResponse({"detail": "Invalid or expired refresh token."}, status=401)
+            _clear_auth_cookie(response)
+            return response
 
     @http_post(
         "/token/verify",
@@ -295,17 +479,55 @@ class AuthController:
         "/token/blacklist",
         response={200: MessageResponse, 401: dict},
         summary="Blacklist a refresh token",
-        description="Blacklist a refresh token so it cannot be used again.",
+        description="Blacklist a refresh token so it cannot be used again. MED-04 FIX: Requires authentication.",
+        auth=JWTAuth(),
     )
-    async def blacklist_token(self, payload: TokenBlacklistInputSchema):
-        """Add a refresh token to the blacklist."""
+    async def blacklist_token(self, request: HttpRequest, payload: TokenBlacklistInputSchema):
+        """Add a refresh token to the blacklist.
+        
+        MED-04 FIX: Now requires authentication. Previously anyone could blacklist
+        any token, enabling DoS attacks.
+        """
         try:
             refresh = await async_decode_refresh(payload.refresh)
             await async_blacklist(refresh)
             return MessageResponse(message="Token blacklisted successfully.")
         except Exception as e:
-            logger.debug(f"Token blacklist failed: {e}")
+            # LOW-01 FIX: Log blacklist failures at WARNING level for security monitoring
+            logger.warning(f"Token blacklist failed: {e}")
             raise UnauthorizedException("Failed to blacklist token.")
+
+    @http_post(
+        "/logout",
+        response={200: MessageResponse, 401: dict},
+        summary="Logout and clear auth cookie",
+        description=(
+            "HIGH-03 FIX: Blacklist the refresh token from cookie and clear auth cookies. "
+            "This is the preferred logout endpoint for browser clients."
+        ),
+    )
+    async def logout_cookie(self, request: HttpRequest):
+        """Logout by blacklisting refresh token from cookie and clearing cookies.
+        
+        HIGH-03 FIX: Reads refresh token from httpOnly cookie, blacklists it,
+        and clears the cookie. This provides secure logout for browser clients.
+        """
+        from django.http import JsonResponse
+        
+        refresh_token = request.COOKIES.get(REFRESH_TOKEN_COOKIE_NAME)
+        
+        if refresh_token:
+            try:
+                refresh = await async_decode_refresh(refresh_token)
+                await async_blacklist(refresh)
+            except Exception as e:
+                # Even if blacklisting fails, clear the cookie
+                logger.debug(f"Failed to blacklist token on logout: {e}")
+
+        response = JsonResponse({"message": "Logged out successfully."})
+        _clear_auth_cookie(response)
+        
+        return response
 
     # =========================================================================
     # Password Reset Endpoints
@@ -351,10 +573,15 @@ class AuthController:
     async def confirm_password_reset(
         self, request: HttpRequest, payload: PasswordResetConfirmSchema
     ):
-        """Confirm password reset with OTP and set new password."""
+        """Confirm password reset with OTP and set new password.
+        
+        MED-03 FIX: Rate limit key now includes email to prevent global exhaustion.
+        Each email has its own rate limit bucket.
+        """
+        # MED-03 FIX: Include email in rate limit key to prevent global exhaustion attacks
         check_rate_limit_or_raise(
             request,
-            "pwreset_confirm",
+            f"pwreset_confirm:{payload.email}",
             max_attempts=getattr(settings, "RATE_LIMIT_PASSWORD_RESET_ATTEMPTS", 5),
             window_seconds=getattr(settings, "RATE_LIMIT_PASSWORD_RESET_WINDOW", 3600),
         )
@@ -381,18 +608,24 @@ class AuthController:
         summary="Request email verification OTP",
         description=(
             "Request a 6-digit verification code to be sent to the provided email. "
-            "The code expires in 10 minutes. Maximum 5 verification attempts."
+            "The code expires in 10 minutes. Maximum 3 verification attempts per email per hour."
         ),
     )
     async def request_email_verification(
         self, request: HttpRequest, payload: EmailVerifyRequestSchema
     ):
-        """Request an email verification OTP."""
+        """Request an email verification OTP.
+        
+        MED-16 FIX: Rate limit now includes email to prevent email bombing attacks.
+        Reduced from 5/5min to 3/hour per email.
+        """
+        # MED-16 FIX: Include email in rate limit key to prevent email bombing
+        # Reduced from 5/5min to 3/hour per email
         check_rate_limit_or_raise(
             request,
-            "email_verify_req",
-            max_attempts=getattr(settings, "RATE_LIMIT_EMAIL_VERIFY_ATTEMPTS", 5),
-            window_seconds=getattr(settings, "RATE_LIMIT_EMAIL_VERIFY_WINDOW", 300),
+            f"email_verify_req:{payload.email}",
+            max_attempts=getattr(settings, "RATE_LIMIT_EMAIL_VERIFY_ATTEMPTS", 3),
+            window_seconds=getattr(settings, "RATE_LIMIT_EMAIL_VERIFY_WINDOW", 3600),  # 1 hour
         )
 
         try:
@@ -467,18 +700,33 @@ class AuthController:
             "the user with an authorization code."
         ),
     )
-    async def exchange_token(self, payload: TokenExchangeInputSchema):
+    async def exchange_token(self, request: HttpRequest, payload: TokenExchangeInputSchema):
         """Exchange an authorization code for a JWT token pair.
         
         Called by the base Sattabase domain's /auth/callback page to
         complete the cross-domain SSO flow. Returns the same response
         format as /auth/login.
+        
+        CRIT-06 FIX: Added rate limiting to prevent brute force attacks on auth codes.
+        HIGH-03 FIX: Also sets refresh token in httpOnly cookie for XSS protection.
         """
+        from django.http import JsonResponse
+        
+        # CRIT-06 FIX: Rate limit auth code exchange to prevent brute force attacks
+        check_rate_limit_or_raise(request, "token_exchange", max_attempts=10, window_seconds=60)
+        
         try:
             user = await AuthService.aexchange_auth_code(payload.code)
             access = await async_token_for_user(user)
             refresh = await async_refresh_for_user(user)
-            return TokenOutputSchema(access=str(access), refresh=str(refresh))
+            
+            # HIGH-03 FIX: Set refresh token in httpOnly cookie
+            # SSO callback uses session cookie (not persistent) for security
+            response_data = TokenOutputSchema(access=str(access), refresh=str(refresh))
+            response = JsonResponse(response_data.dict())
+            _set_auth_cookie(response, str(refresh), remember=False)
+            
+            return response
         except ValueError as e:
             msg = str(e)
             if "not verified" in msg:
@@ -630,6 +878,8 @@ class UserController:
         self, request: HttpRequest, payload: ChangePasswordInputSchema
     ):
         """Change password after verifying current password."""
+        # HIGH-19: Rate limit password changes to prevent abuse
+        check_rate_limit_or_raise(request, "change_password", max_attempts=5, window_seconds=3600)
         try:
             await AuthService.achange_password(
                 request.user,

@@ -49,6 +49,16 @@ app.conf.beat_schedule = {
         "schedule": crontab(minute=0, hour=5, day_of_week="sunday"),  # Weekly Sunday
         "args": (90,),  # retention_days
     },
+    # Credit: Consume billing periods from active credit pools daily
+    "consume-credit-periods-daily": {
+        "task": "billing.tasks.consume_credit_periods",
+        "schedule": crontab(minute=0, hour=5),  # 5:00 AM UTC daily
+    },
+    # Credit: Mark expired credit pools daily
+    "expire-credit-pools-daily": {
+        "task": "billing.tasks.expire_credit_pools",
+        "schedule": crontab(minute=30, hour=5),  # 5:30 AM UTC daily
+    },
     # Cleanup expired auth tokens every day at 3 AM UTC
     # "cleanup-expired-tokens": {
     #     "task": "common.tasks.cleanup_expired_tokens",

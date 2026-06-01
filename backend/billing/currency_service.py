@@ -175,7 +175,19 @@ def get_exchange_rate(
             base_currency=to_code,
             target_currency=from_code,
         )
-        return Decimal("1") / reverse.rate if reverse.rate > 0 else None
+        # MED-06 FIX: Check for zero or very small rates that could cause precision issues
+        # A rate less than 0.0001 would produce an inverted rate > 10000, which is unusual
+        # and could indicate data issues
+        if reverse.rate is None or reverse.rate <= 0:
+            logger.warning(f"Invalid exchange rate detected: {reverse.rate} for {to_code}/{from_code}")
+            return None
+        if reverse.rate < Decimal("0.0001"):
+            logger.warning(
+                f"Suspiciously small exchange rate: {reverse.rate} for {to_code}/{from_code}. "
+                "Inverted rate would be very large. Please verify exchange rate data."
+            )
+            # Still return the inverted rate but log the warning
+        return Decimal("1") / reverse.rate
     except ExchangeRate.DoesNotExist:
         pass
 
@@ -200,19 +212,43 @@ def convert_price(
         (converted_amount_cents, exchange_rate_used)
 
     If no rate is available, returns (None, None) so the caller knows
-    conversion failed and can fall back to the original price/currency.
+        conversion failed and can fall back to the original price/currency.
+    
+    HIGH-08: Fixed to handle zero-decimal currencies (JPY, KRW, VND, etc.)
+    For zero-decimal currencies, the "cents" value is actually the main unit
+    (e.g., 1000 JPY cents = 1000 yen, not 10 yen).
     """
     rate = get_exchange_rate(from_currency, to_currency)
     if rate is None:
         return None, None
 
-    # Convert cents → decimal → apply rate → round to cents
-    original = Decimal(amount_cents) / Decimal(100)
-    converted = (original * rate).quantize(
-        Decimal("0.01"),
-        rounding=ROUND_HALF_UP,
-    )
-    converted_cents = int(converted * 100)
+    # HIGH-08: Get decimal digits for both currencies
+    from_digits = get_currency_decimal_digits(from_currency)
+    to_digits = get_currency_decimal_digits(to_currency)
+    
+    # Convert from "cents" to decimal amount
+    # For 2-decimal currencies: cents / 100 = amount
+    # For 0-decimal currencies: cents / 1 = amount (no subunits)
+    from_divisor = Decimal(10 ** from_digits)
+    original = Decimal(amount_cents) / from_divisor
+    
+    # Apply exchange rate
+    converted = original * rate
+    
+    # Round to appropriate decimal places for target currency
+    if to_digits > 0:
+        quantize_str = "0." + "0" * to_digits
+        converted = converted.quantize(Decimal(quantize_str), rounding=ROUND_HALF_UP)
+    else:
+        # Zero-decimal currency: round to integer
+        converted = converted.quantize(Decimal("1"), rounding=ROUND_HALF_UP)
+    
+    # Convert back to "cents" (smallest unit)
+    # For 2-decimal currencies: amount * 100 = cents
+    # For 0-decimal currencies: amount * 1 = cents (same value)
+    to_multiplier = Decimal(10 ** to_digits)
+    converted_cents = int(converted * to_multiplier)
+    
     return converted_cents, rate
 
 

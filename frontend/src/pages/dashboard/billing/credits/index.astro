@@ -1,28 +1,17 @@
 ---
+/**
+ * User Credits — /dashboard/billing/credits
+ *
+ * Displays user's credit pools and invoices.
+ * Mounts UserCreditsClient Vue component.
+ */
 import DashboardLayout from "@/layouts/DashboardLayout.astro";
-import { creditsApi } from "@/lib/credits";
-import type { CreditPool, CreditInvoice } from "@/lib/credits";
-
-// Server-side data fetch would go here in a real app
-// For now, the Vue component fetches client-side
+import UserCreditsClient from "@/components/vue/UserCreditsClient.vue";
 ---
 
-<DashboardLayout title="My Credits">
-  <div class="max-w-5xl mx-auto">
-    <div class="mb-6">
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">My Credits</h1>
-      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-        View your prepaid credit pools and invoices. Credits give you access to sister domain services.
-      </p>
-    </div>
-    <UserCreditsClient />
-  </div>
+<DashboardLayout
+  title="Credit Pools — SattaBase"
+  description="Manage your prepaid credits and view purchase history."
+>
+  <UserCreditsClient client:only="vue" />
 </DashboardLayout>
-
-<script>
-  // Client-side mount point for Vue component
-  import UserCreditsClient from "@/components/vue/UserCreditsClient.vue";
-  import { defineComponent, h, createApp } from "vue";
-
-  // The Vue component will be mounted by Astro's client directive
-</script>

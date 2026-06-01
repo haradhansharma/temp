@@ -1,9 +1,21 @@
 ---
-import DashboardLayout from "@/layouts/DashboardLayout.astro";
+/**
+ * Admin Credits — /admin/credits
+ *
+ * Credit pools management page for administrators.
+ * Mounts CreditManagement Vue component.
+ */
+import AdminLayout from "@/layouts/AdminLayout.astro";
+import CreditManagement from "@/components/admin/CreditManagement.vue";
 ---
 
-<DashboardLayout title="Credit Pools — Admin">
-  <div class="max-w-6xl mx-auto">
-    <CreditManagementClient />
-  </div>
-</DashboardLayout>
+<AdminLayout
+  title="Credit Pools — Admin — SattaBase"
+  description="Manage prepaid credit pools for all users."
+>
+  <CreditManagement client:only="vue" />
+</AdminLayout>
+
+<script>
+  import { useAdminGuard } from "@/composables/useAdminGuard";
+</script>

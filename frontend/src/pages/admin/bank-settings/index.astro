@@ -1,0 +1,15 @@
+---
+/**
+ * Admin Bank Settings Page
+ *
+ * Allows admins to configure bank account details for manual credit purchases.
+ * Only accessible to staff/admin users.
+ */
+
+import AdminLayout from "@/layouts/AdminLayout.astro";
+import BankSettingsAdmin from "@/components/admin/BankSettingsAdmin.vue";
+---
+
+<AdminLayout title="Bank Settings | Admin">
+  <BankSettingsAdmin client:only="vue" />
+</AdminLayout>

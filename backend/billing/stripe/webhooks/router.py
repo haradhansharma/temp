@@ -139,8 +139,9 @@ def process_event(event: dict) -> None:
         logger.warning("[WEBHOOK-DIAG] No handler registered for: %s (%s)", event_type, event_id)
         return
 
-    logger.warning(
-        "[WEBHOOK-DIAG] Dispatching to %s: %s (%s)",
+    # LOW-10 FIX: Changed from WARNING to INFO for normal operation logging
+    logger.info(
+        "[WEBHOOK] Dispatching to %s: %s (%s)",
         handler.__name__, event_type, event_id,
     )
     try:
@@ -148,8 +149,9 @@ def process_event(event: dict) -> None:
             with transaction.atomic():
                 handler(event)
         WebhookEventLog.objects.filter(event_id=event_id).update(processed=True)
-        logger.warning(
-            "[WEBHOOK-DIAG] Handler %s SUCCEEDED for %s (%s)",
+        # LOW-10 FIX: Changed from WARNING to INFO for success logging
+        logger.info(
+            "[WEBHOOK] Handler %s SUCCEEDED for %s (%s)",
             handler.__name__, event_type, event_id,
         )
     except TimeoutError as e:
@@ -167,13 +169,18 @@ def process_event(event: dict) -> None:
 
 
 def reconcile_unprocessed(max_age_hours: int = 24) -> dict:
-    """Retry failed webhook events.  For Celery periodic task."""
+    """Retry failed webhook events.  For Celery periodic task.
+    
+    LOW-09 FIX: Previously only retried events with error_message__gt="" which
+    excluded events that failed before logging an error (e.g., timeout, crash).
+    Now retries ALL unprocessed events regardless of error_message state.
+    """
     from django.utils import timezone
 
     cutoff = timezone.now() - timezone.timedelta(hours=max_age_hours)
+    # LOW-09 FIX: Removed error_message__gt="" filter to include all unprocessed events
     unprocessed = WebhookEventLog.objects.filter(
         processed=False,
-        error_message__gt="",
         created_at__gte=cutoff,
     ).order_by("created_at")[:50]
 

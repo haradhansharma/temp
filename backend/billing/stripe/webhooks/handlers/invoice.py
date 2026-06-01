@@ -3,7 +3,7 @@
 import logging
 
 from ....models import Subscription, SubscriptionStatus, Invoice, InvoiceStatus, RevenueRecognitionEntry, InvoiceLineItem
-from ...client import ts_to_dt, get_api_key, retrieve_charge
+from ...client import ts_to_dt, get_api_key, retrieve_charge, retrieve_balance_transaction
 from ..utils import sanitize_for_json
 
 logger = logging.getLogger(__name__)
@@ -169,14 +169,9 @@ def handle_invoice_payment_succeeded(event: dict) -> None:
             charge_dict = retrieve_charge(charge)
             bt_id = charge_dict.get("balance_transaction")
             if bt_id:
-                # Retrieve balance transaction inline (returns plain dict
-                # since we import retrieve_charge above; use direct API
-                # call via the same pattern — all results are dicts)
-                import stripe as _stripe
-                bt = _stripe.BalanceTransaction.retrieve(
-                    bt_id, api_key=get_api_key()
-                )
-                bt_dict = bt if isinstance(bt, dict) else dict(bt._values) if hasattr(bt, '_values') else {}
+                # LOW-11 FIX: Use centralized retrieve_balance_transaction from client.py
+                # instead of direct stripe import for consistent error handling
+                bt_dict = retrieve_balance_transaction(bt_id)
                 fee = int(bt_dict.get("fee", 0) or 0)
                 fee_currency = (bt_dict.get("currency") or "usd").upper()
                 Invoice.objects.filter(
