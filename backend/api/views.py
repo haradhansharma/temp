@@ -25,6 +25,7 @@ logger = logging.getLogger(__name__)
 api = NinjaExtraAPI(
     title="Sattabase API",
     version="1.0.0",
+    csrf=False,  # JWT-based auth; CSRF exemption handled at API level, not per-endpoint
     description=(
         "Sattabase API — Central Multi-Tenant Subscription Platform.\n\n"
         "## Authentication\n\n"

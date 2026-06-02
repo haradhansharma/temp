@@ -5,6 +5,12 @@
  * dashboard components. Eliminates duplicate getSubscriptions() calls from
  * DashboardHome, BillingOverview, PlanComparison, and ProfileCard.
  *
+ * CRITICAL FIX: Vue ref() objects created at module level are destroyed
+ * when the module is re-evaluated by Astro View Transitions (VM#### contexts).
+ * We now store the reactive state on the window object so it persists across
+ * module re-evaluations. On re-evaluation, we recover the existing refs from
+ * window instead of creating new ones.
+ *
  * Usage:
  *   const { subscriptions, loading, fetchSubscriptions, refetchSubscriptions } = useSubscription();
  */
@@ -13,12 +19,52 @@ import { ref } from "vue";
 import { billingApi } from "@/lib/billing";
 import type { SubscriptionOutputSchema } from "@/lib/billing";
 
-// ─── Module-level shared state (singleton across all components) ────────────
+// ─── Window-level shared state (survives module re-evaluation) ────────────
 
-const sharedSubscriptions = ref<SubscriptionOutputSchema[]>([]);
-const sharedLoading = ref(false);
-const sharedInitialized = ref(false);
-let fetchPromise: Promise<SubscriptionOutputSchema[]> | null = null;
+const SB_SUB_COMPOSABLE_KEY = "__sb_sub_composable";
+
+interface SharedSubState {
+  // Vue reactive refs — stored on window so they survive module re-evaluation
+  subscriptionsRef: any; // ref<SubscriptionOutputSchema[]>
+  loadingRef: any; // ref<boolean>
+  initializedRef: any; // ref<boolean>
+
+  // Plain data for deduplication (not reactive)
+  fetchPromise: Promise<SubscriptionOutputSchema[]> | null;
+}
+
+function getSharedSubState(): SharedSubState {
+  if (typeof window === "undefined") {
+    // SSR fallback
+    return {
+      subscriptionsRef: ref<SubscriptionOutputSchema[]>([]),
+      loadingRef: ref(false),
+      initializedRef: ref(false),
+      fetchPromise: null,
+    };
+  }
+  const win = window as any;
+  if (!win[SB_SUB_COMPOSABLE_KEY]) {
+    win[SB_SUB_COMPOSABLE_KEY] = {
+      // Create Vue refs ONCE and store on window
+      subscriptionsRef: ref<SubscriptionOutputSchema[]>([]),
+      loadingRef: ref(false),
+      initializedRef: ref(false),
+      // Plain data
+      fetchPromise: null,
+    };
+  }
+  return win[SB_SUB_COMPOSABLE_KEY];
+}
+
+// Recover shared refs from window (or create new ones for SSR)
+const sharedState = getSharedSubState();
+const sharedSubscriptions = sharedState.subscriptionsRef as import("vue").Ref<
+  SubscriptionOutputSchema[]
+>;
+const sharedLoading = sharedState.loadingRef as import("vue").Ref<boolean>;
+const sharedInitialized =
+  sharedState.initializedRef as import("vue").Ref<boolean>;
 
 export function useSubscription() {
   const subscriptions = sharedSubscriptions;
@@ -33,11 +79,15 @@ export function useSubscription() {
    * to force a fresh fetch (e.g. after plan change or checkout).
    */
   async function fetchSubscriptions(): Promise<SubscriptionOutputSchema[]> {
-    if (sharedInitialized.value && sharedSubscriptions.value) return sharedSubscriptions.value;
+    // Return cached data if already initialized (check both ref and window-level state)
+    if (sharedInitialized.value && sharedSubscriptions.value.length > 0) {
+      return sharedSubscriptions.value;
+    }
 
-    if (fetchPromise) return fetchPromise;
+    const ws = getSharedSubState();
+    if (ws.fetchPromise) return ws.fetchPromise;
 
-    fetchPromise = (async () => {
+    ws.fetchPromise = (async () => {
       sharedLoading.value = true;
       try {
         const data = await billingApi.getSubscriptions();
@@ -48,11 +98,11 @@ export function useSubscription() {
         return [];
       } finally {
         sharedLoading.value = false;
-        fetchPromise = null;
+        ws.fetchPromise = null;
       }
     })();
 
-    return fetchPromise;
+    return ws.fetchPromise;
   }
 
   /**
@@ -61,7 +111,9 @@ export function useSubscription() {
    */
   async function refetchSubscriptions(): Promise<SubscriptionOutputSchema[]> {
     sharedInitialized.value = false;
-    fetchPromise = null;
+    sharedSubscriptions.value = [];
+    const ws = getSharedSubState();
+    ws.fetchPromise = null;
     return fetchSubscriptions();
   }
 

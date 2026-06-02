@@ -17,6 +17,7 @@
 
 import { ref, computed, onMounted, watch, onUnmounted } from "vue";
 import { requireAuth, getErrorMessage } from "@/lib/auth";
+import { authHelpers } from "@/lib/api";
 import { showToast } from "@/lib/toast";
 import { adminApi, formatDateTime } from "@/lib/admin";
 import type {
@@ -307,9 +308,12 @@ watch(activeTab, (tab) => {
 
 // ─── Plan navigation ─────────────────────────────────────────────────────────
 
+// VUE 3 CONVENTION: Use authHelpers.navigateTo() (Astro's navigate())
+// instead of window.location.href to avoid the "querySelector null" error
+// during View Transitions. Defer with setTimeout to avoid race conditions.
 function handlePlanRowClick(row: Record<string, unknown>) {
   const plan = row as PlanItem;
-  window.location.href = `/admin/plans/${plan.id}`;
+  setTimeout(() => authHelpers.navigateTo(`/admin/plans/${plan.id}`), 0);
 }
 
 // ─── Format price ────────────────────────────────────────────────────────────
@@ -395,7 +399,8 @@ async function confirmDeleteProduct() {
     await adminApi.deleteProduct(productId.value!);
     showToast("Product deleted.", "success");
     showDeleteProductDialog.value = false;
-    window.location.href = "/admin/products";
+    // VUE 3 CONVENTION: Use authHelpers.navigateTo() instead of window.location.href
+    setTimeout(() => authHelpers.navigateTo("/admin/products"), 0);
   } catch (err) {
     showToast(getErrorMessage(err), "error");
   } finally {

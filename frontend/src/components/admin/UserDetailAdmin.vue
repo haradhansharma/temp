@@ -17,6 +17,7 @@
 
 import { ref, computed, onMounted, watch, onUnmounted } from "vue";
 import { requireAuth, getErrorMessage } from "@/lib/auth";
+import { authHelpers } from "@/lib/api";
 import { showToast } from "@/lib/toast";
 import { adminApi, formatDateTime } from "@/lib/admin";
 import type {
@@ -578,7 +579,7 @@ function handleAuditPageChange(page: number) {
           :clickable="true"
           row-key="id"
           empty-message="No subscriptions"
-          @row-click="(row: Record<string, unknown>) => { const sub = row as UserSubscriptionItem; window.location.href = `/admin/subscriptions/${sub.id}`; }"
+          @row-click="(row: Record<string, unknown>) => { const sub = row as UserSubscriptionItem; setTimeout(() => authHelpers.navigateTo(`/admin/subscriptions/${sub.id}`), 0); }"
         >
           <!-- Product cell -->
           <template #cell-product_name="{ row }">

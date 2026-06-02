@@ -14,7 +14,8 @@
 import BaseLayout from "./BaseLayout.astro";
 import AdminSidebar from "@/components/astro/AdminSidebar.astro";
 import AdminNavbar from "@/components/astro/AdminNavbar.astro";
-
+import AdminGuard from "@/components/vue/AdminGuard.vue";
+import SessionGuard from "@/components/vue/SessionGuard.vue";
 interface Props {
   title?: string;
   description?: string;
@@ -132,6 +133,13 @@ const {
       </main>
     </div>
   </div>
+
+  <!-- Session Guard: monitors auth state and redirects on session expiry -->
+  <SessionGuard client:load />
+
+  <!-- Admin Guard: enforces admin role (is_staff/owner/admin) check -->
+  <!-- SECURITY: This must use client:load so it runs immediately on mount -->
+  <AdminGuard client:load />
 </BaseLayout>
 
 <script>

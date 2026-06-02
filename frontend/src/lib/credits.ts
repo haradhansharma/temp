@@ -10,7 +10,7 @@
  *   const myCredits = await creditsApi.getMyCredits();
  */
 
-import { apiClient } from "@/lib/api";
+import { apiClient, authHelpers } from "@/lib/api";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -252,9 +252,7 @@ export const creditsApi = {
     // The browser will handle the download directly
     const baseUrl =
       import.meta.env.PUBLIC_API_BASE_URL || "http://localhost:8086/api/v1";
-    const token =
-      sessionStorage.getItem("auth_access_token") ||
-      localStorage.getItem("auth_access_token");
+    const token = authHelpers.getAccessToken();
     return `${baseUrl}/admin/credit-invoices/${invoiceNumber}/pdf?token=${token}`;
   },
 
@@ -317,9 +315,7 @@ export const creditsApi = {
     return apiClient.get<CreditRequest>(`/admin/credit-requests/${requestId}`);
   },
 
-  async adminApproveCreditRequest(
-    requestId: number,
-  ): Promise<{
+  async adminApproveCreditRequest(requestId: number): Promise<{
     id: number;
     status: string;
     credit_pool_id: number;

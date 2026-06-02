@@ -91,8 +91,18 @@ const ogImage = `${Astro.site || "https://base.sattaspace.com"}/og-image.png`;
   </body>
 </html>
 
-<!-- Toast container initialization -->
+<!-- Toast container initialization + Astro navigate() registration -->
 <script>
   import { initToasts } from "@/lib/toast";
+  import { registerNavigate } from "@/lib/api";
+  import { navigate } from "astro:transitions/client";
+
+  // Register Astro's navigate() function IMMEDIATELY on page load.
+  // This makes it available to SessionGuard.vue and useAuth.ts via
+  // authHelpers.navigateTo() before any auth redirects are needed.
+  // VUE 3 CONVENTION: Equivalent to having router.push() available
+  // from the start — navigation always uses the framework's router.
+  registerNavigate(navigate);
+
   initToasts();
 </script>

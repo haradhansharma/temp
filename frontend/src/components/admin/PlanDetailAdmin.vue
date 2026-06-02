@@ -13,6 +13,7 @@
 
 import { ref, computed, onMounted, onUnmounted } from "vue";
 import { requireAuth, getErrorMessage } from "@/lib/auth";
+import { authHelpers } from "@/lib/api";
 import { showToast } from "@/lib/toast";
 import { adminApi, formatDateTime } from "@/lib/admin";
 import type {
@@ -236,11 +237,11 @@ async function confirmDeletePlan() {
     await adminApi.deletePlan(planId.value!);
     showToast("Plan deleted.", "success");
     showDeletePlanDialog.value = false;
-    // Navigate back to product detail
+    // VUE 3 CONVENTION: Use authHelpers.navigateTo() instead of window.location.href
     if (plan.value) {
-      window.location.href = `/admin/products/${plan.value.product_id}`;
+      setTimeout(() => authHelpers.navigateTo(`/admin/products/${plan.value.product_id}`), 0);
     } else {
-      window.location.href = "/admin/products";
+      setTimeout(() => authHelpers.navigateTo("/admin/products"), 0);
     }
   } catch (err) {
     showToast(getErrorMessage(err), "error");
@@ -266,8 +267,8 @@ function handleEntrySort({ key, direction }: { key: string; direction: "asc" | "
 
 function goToAccessMatrix() {
   if (plan.value) {
-    // Use Astro's client-side navigation for smooth transition
-    window.location.href = `/admin/products/${plan.value.product_id}?tab=matrix`;
+    // VUE 3 CONVENTION: Use authHelpers.navigateTo() instead of window.location.href
+    setTimeout(() => authHelpers.navigateTo(`/admin/products/${plan.value.product_id}?tab=matrix`), 0);
   }
 }
 </script>

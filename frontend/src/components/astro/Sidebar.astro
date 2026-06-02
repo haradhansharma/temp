@@ -571,6 +571,154 @@ const currentPath = Astro.url.pathname;
 </style>
 
 <script>
+  // ── Sidebar state cache ──
+  // Caches admin visibility and plan info so we don't make
+  // redundant API calls on every astro:page-load navigation.
+  // Uses window object to persist across module re-evaluations (HMR, View Transitions).
+  const SB_SIDEBAR_KEY = "__sb_sidebar";
+  function getSidebarCache(): {
+    adminVisible: boolean;
+    adminChecked: boolean;
+    planInfoLoaded: boolean;
+  } {
+    if (typeof window !== "undefined" && !(window as any)[SB_SIDEBAR_KEY]) {
+      (window as any)[SB_SIDEBAR_KEY] = {
+        adminVisible: false,
+        adminChecked: false,
+        planInfoLoaded: false,
+      };
+    }
+    return typeof window !== "undefined"
+      ? (window as any)[SB_SIDEBAR_KEY]
+      : { adminVisible: false, adminChecked: false, planInfoLoaded: false };
+  }
+  let _adminVisible = getSidebarCache().adminVisible;
+  let _adminChecked = getSidebarCache().adminChecked;
+
+  function updateAdminUI(visible: boolean) {
+    const adminElements = document.querySelectorAll("[data-admin-section]");
+    adminElements.forEach((el) => {
+      (el as HTMLElement).style.display = visible ? "" : "none";
+    });
+    if (visible) {
+      const adminItems = document.querySelector(
+        "[data-section-items='admin']",
+      ) as HTMLElement;
+      if (adminItems && !adminItems.classList.contains("expanded")) {
+        adminItems.classList.add("expanded");
+      }
+    }
+  }
+
+  /**
+   * Check admin visibility — fetches from API only once, then caches the result.
+   * On subsequent calls (e.g., astro:page-load navigations), returns the cached
+   * value without making an API call. This prevents the cascading 401 errors
+   * caused by uncoordinated GET /users/me calls on every page navigation.
+   */
+  async function checkAdminVisibility() {
+    // Return cached result if available — avoids redundant API calls
+    if (_adminChecked) {
+      updateAdminUI(_adminVisible);
+      return;
+    }
+
+    try {
+      const { apiClient } = await import("@/lib/api");
+      const user = await apiClient.get<{ role: string; is_staff: boolean }>(
+        "/users/me",
+      );
+      _adminVisible =
+        user.is_staff === true ||
+        user.role === "owner" ||
+        user.role === "admin";
+      _adminChecked = true;
+      // Persist cache to window for cross-module-instance access
+      const cache = getSidebarCache();
+      cache.adminVisible = _adminVisible;
+      cache.adminChecked = _adminChecked;
+      updateAdminUI(_adminVisible);
+    } catch {
+      // User not authenticated or fetch failed — keep admin section hidden
+      _adminVisible = false;
+      // Don't cache failure — retry on next call (auth might recover)
+      updateAdminUI(false);
+    }
+  }
+
+  // ── Load subscription plan info ──
+  let _planInfoLoaded = getSidebarCache().planInfoLoaded;
+
+  async function loadPlanInfo() {
+    const planLabel = document.getElementById("sidebar-plan-label");
+    const planDot = document.getElementById("sidebar-plan-dot");
+    if (!planLabel) return;
+
+    // Skip if already loaded — plan info doesn't change within a session
+    if (_planInfoLoaded) return;
+
+    try {
+      const { apiClient } = await import("@/lib/api");
+      const data = await apiClient.get<{ items: any[] }>(
+        "/billing/subscriptions",
+      );
+      const subs = data?.items || [];
+      const activeSub =
+        subs.find(
+          (s: any) => s.status === "active" || s.status === "trialing",
+        ) || null;
+      if (activeSub) {
+        planLabel.textContent = activeSub.plan_name;
+        if (planDot) {
+          if (activeSub.status === "active") {
+            planDot.className =
+              "flex h-2 w-2 rounded-full bg-brand-500 shrink-0";
+          } else if (activeSub.status === "trialing") {
+            planDot.className =
+              "flex h-2 w-2 rounded-full bg-blue-500 shrink-0 animate-pulse";
+          } else if (activeSub.status === "past_due") {
+            planDot.className =
+              "flex h-2 w-2 rounded-full bg-amber-500 shrink-0 animate-pulse";
+          }
+        }
+      } else {
+        planLabel.textContent = "Free Plan";
+        if (planDot) {
+          planDot.className =
+            "flex h-2 w-2 rounded-full bg-muted-foreground/40 shrink-0";
+        }
+      }
+      _planInfoLoaded = true;
+      getSidebarCache().planInfoLoaded = true;
+    } catch {
+      planLabel.textContent = "Free Plan";
+      const dot = document.getElementById("sidebar-plan-dot");
+      if (dot) {
+        dot.className =
+          "flex h-2 w-2 rounded-full bg-muted-foreground/40 shrink-0";
+      }
+    }
+  }
+
+  // ── Listen for auth events to invalidate cache ──
+  // When the user logs out, clear the cached admin/plan data
+  // so it's re-fetched if they log back in.
+  import("@/lib/api").then(({ onAuthEvent }) => {
+    onAuthEvent((event) => {
+      if (event === "auth:logout") {
+        _adminVisible = false;
+        _adminChecked = false;
+        _planInfoLoaded = false;
+        // Clear window cache too
+        const cache = getSidebarCache();
+        cache.adminVisible = false;
+        cache.adminChecked = false;
+        cache.planInfoLoaded = false;
+        updateAdminUI(false);
+      }
+    });
+  });
+
   document.addEventListener("DOMContentLoaded", () => {
     // ── Section collapse/expand ──
     const sectionToggles = document.querySelectorAll("[data-section-toggle]");
@@ -629,8 +777,14 @@ const currentPath = Astro.url.pathname;
 
     // ── User info click → go to profile ──
     const userInfo = document.getElementById("sidebar-user-info");
-    userInfo?.addEventListener("click", () => {
-      window.location.href = "/dashboard/profile";
+    userInfo?.addEventListener("click", async () => {
+      // VUE 3 CONVENTION: Use navigate() for internal navigation
+      try {
+        const { navigate } = await import("astro:transitions/client");
+        navigate("/dashboard/profile");
+      } catch {
+        window.location.href = "/dashboard/profile";
+      }
     });
 
     // ── Sign out ──
@@ -641,12 +795,13 @@ const currentPath = Astro.url.pathname;
         const { logout } = await import("@/lib/auth");
         await logout();
       } catch {
-        sessionStorage.removeItem("auth_access_token");
-        sessionStorage.removeItem("auth_refresh_token");
-        localStorage.removeItem("auth_access_token");
-        localStorage.removeItem("auth_refresh_token");
-        localStorage.removeItem("auth_remember_me");
-        window.location.href = "/auth/login";
+        // VUE 3 CONVENTION: Use navigate() instead of window.location.href
+        try {
+          const { navigate } = await import("astro:transitions/client");
+          navigate("/auth/login", { history: "replace" });
+        } catch {
+          window.location.href = "/auth/login";
+        }
       }
     });
 
@@ -685,90 +840,9 @@ const currentPath = Astro.url.pathname;
     }
 
     // ── Role-based admin section visibility ──
-    // Shows the Admin nav section for staff users (is_staff or owner/admin role).
-    // The section is hidden by default (style="display:none") and only revealed
-    // if the authenticated user has staff privileges.
-    async function checkAdminVisibility() {
-      try {
-        const { apiClient } = await import("@/lib/api");
-        const user = await apiClient.get<{ role: string; is_staff: boolean }>(
-          "/users/me",
-        );
-        const isStaff =
-          user.is_staff === true ||
-          user.role === "owner" ||
-          user.role === "admin";
-        const adminElements = document.querySelectorAll("[data-admin-section]");
-        adminElements.forEach((el) => {
-          (el as HTMLElement).style.display = isStaff ? "" : "none";
-        });
-        // Initialize section collapse for the admin section if visible
-        if (isStaff) {
-          const adminItems = document.querySelector(
-            "[data-section-items='admin']",
-          ) as HTMLElement;
-          if (adminItems && !adminItems.classList.contains("expanded")) {
-            adminItems.classList.add("expanded");
-          }
-        }
-      } catch {
-        // User not authenticated or fetch failed — keep admin section hidden
-        const adminElements = document.querySelectorAll("[data-admin-section]");
-        adminElements.forEach((el) => {
-          (el as HTMLElement).style.display = "none";
-        });
-      }
-    }
+    // Only fetches from API on first call; returns cached result after that.
     checkAdminVisibility();
-    // Re-check on page transitions since the sidebar may be re-rendered (mobile)
-    document.addEventListener("astro:page-load", checkAdminVisibility);
-
-    // ── Load subscription plan info ──
-    async function loadPlanInfo() {
-      const planLabel = document.getElementById("sidebar-plan-label");
-      const planDot = document.getElementById("sidebar-plan-dot");
-      if (!planLabel) return;
-
-      try {
-        const { apiClient } = await import("@/lib/api");
-        const data = await apiClient.get<{ items: any[] }>(
-          "/billing/subscriptions",
-        );
-        const subs = data?.items || [];
-        const activeSub =
-          subs.find(
-            (s: any) => s.status === "active" || s.status === "trialing",
-          ) || null;
-        if (activeSub) {
-          planLabel.textContent = activeSub.plan_name;
-          if (planDot) {
-            if (activeSub.status === "active") {
-              planDot.className =
-                "flex h-2 w-2 rounded-full bg-brand-500 shrink-0";
-            } else if (activeSub.status === "trialing") {
-              planDot.className =
-                "flex h-2 w-2 rounded-full bg-blue-500 shrink-0 animate-pulse";
-            } else if (activeSub.status === "past_due") {
-              planDot.className =
-                "flex h-2 w-2 rounded-full bg-amber-500 shrink-0 animate-pulse";
-            }
-          }
-        } else {
-          planLabel.textContent = "Free Plan";
-          if (planDot) {
-            planDot.className =
-              "flex h-2 w-2 rounded-full bg-muted-foreground/40 shrink-0";
-          }
-        }
-      } catch {
-        planLabel.textContent = "Free Plan";
-        const dot = document.getElementById("sidebar-plan-dot");
-        if (dot) {
-          dot.className =
-            "flex h-2 w-2 rounded-full bg-muted-foreground/40 shrink-0";
-        }
-      }
-    }
+    loadPlanInfo();
 
     // ── Active nav highlight (client-side, works with transition:persist) ──
     // transition:persist freezes the sidebar, so Astro.url.pathname only runs once.
@@ -852,9 +926,16 @@ const currentPath = Astro.url.pathname;
       });
     }
 
-    // Run on initial load and on every Astro View Transition
+    // Run on initial load
     updateActiveNav();
-    document.addEventListener("astro:page-load", updateActiveNav);
+    // On page transitions: only update nav highlighting and re-apply cached admin state.
+    // Do NOT re-fetch admin/plan data — that causes redundant API calls and
+    // cascading 401 errors when the token needs refresh.
+    document.addEventListener("astro:page-load", () => {
+      updateActiveNav();
+      // Re-apply cached admin visibility (no API call)
+      updateAdminUI(_adminVisible);
+    });
     document.addEventListener("astro:after-swap", updateActiveNav);
   });
 </script>

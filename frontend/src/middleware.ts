@@ -7,12 +7,12 @@
  *
  * If the user is not authenticated or not staff, it redirects to /dashboard.
  *
- * Note: The existing auth flow is entirely client-side (JWT in sessionStorage/
- * localStorage). Since Astro runs in SSR mode, we can't directly access
- * browser storage on the server. Instead, we:
- *   1. Read the token from the cookie (if set) or from the request
- *   2. If no token found, let the page render — the client-side auth
- *      check in each admin page's Vue component will handle redirect
+ * Note: Auth tokens are stored client-side (access token in window.__sb_auth
+ * shared state, refresh token in httpOnly cookie). Since Astro runs in SSR
+ * mode, we can't access browser storage on the server. Instead, we:
+ *   1. Let the request through — the client-side auth check in each admin
+ *      page's Vue component will handle redirect
+ *   2. The backend API endpoints enforce is_staff regardless
  *
  * This middleware provides a *best-effort* server-side guard. The primary
  * protection is the client-side check in each admin page component + the
@@ -33,17 +33,11 @@ export const onRequest = defineMiddleware(async (context, next) => {
     pathname.startsWith(ADMIN_PATH_PREFIX) &&
     !pathname.startsWith(DJANGO_ADMIN_PATH)
   ) {
-    // Try to get token from cookies (set by client-side on login)
-    // The client-side stores tokens in sessionStorage/localStorage,
-    // which are NOT available on the server. We rely on a companion
-    // cookie that the client sets on login for SSR middleware.
-    //
-    // For now, we let the request through and rely on the client-side
-    // admin guard (AdminGuard.vue / page-level checks) for the redirect.
+    // Auth tokens are stored client-side (window.__sb_auth + httpOnly cookie).
+    // These are NOT available on the server during SSR.
+    // We let the request through and rely on the client-side admin guard
+    // (AdminGuard.vue / page-level checks) for the redirect.
     // The backend API endpoints enforce is_staff regardless.
-    //
-    // Future improvement: Set an httpOnly cookie on login with a
-    // server-verifiable session token for true SSR middleware.
   }
 
   return next();

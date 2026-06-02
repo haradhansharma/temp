@@ -25,6 +25,8 @@ import {
   formatDate,
   getUserCurrency,
   setUserCurrency,
+  getFeatureValueType,
+  formatFeatureValue,
 } from "@/lib/billing";
 import type {
   ProductDetailSchema,
@@ -562,31 +564,42 @@ async function executeChangePlan(planSlug: string) {
             </p>
           </div>
 
-          <!-- UX-07 Part 2 Fix: Enhanced feature display with usage limit badges.
-               Each feature now shows a visual badge for its type:
-               - Numeric limits (10, 5GB, etc.) get a blue "limit" badge
-               - Unlimited/infinity get a purple "unlimited" badge
-               - Boolean/other values get a green checkmark
-               This makes it immediately obvious what's limited vs unlimited. -->
+          <!-- Feature list with typed value formatting:
+               - boolean true  → green checkmark + "True"
+               - boolean false → red cross + "False"
+               - integer 0     → purple infinity + "Unlimited"
+               - integer N>0   → blue hash + numeric badge
+               - string        → green checkmark + as-is text
+          -->
           <ul class="flex-1 space-y-3 mb-6" role="list">
             <li
               v-for="(value, key) in plan.features"
               :key="key"
               class="flex items-start gap-2.5 text-sm"
             >
-              <!-- UX-07: Semantic feature icons with enhanced usage badges -->
-              <!-- Numeric limit (e.g. "10", "5GB") — show limit badge -->
+              <!-- Boolean true: green checkmark -->
               <svg
-                v-if="typeof value === 'number' || String(value).match(/^\d+/)"
-                class="mt-0.5 h-4 w-4 shrink-0 text-blue-500"
+                v-if="getFeatureValueType(value) === 'boolean-true'"
+                class="mt-0.5 h-4 w-4 shrink-0 text-brand-500"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
               >
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
               </svg>
+              <!-- Boolean false: red cross -->
               <svg
-                v-else-if="String(value).match(/unlimited|infinity/i)"
+                v-else-if="getFeatureValueType(value) === 'boolean-false'"
+                class="mt-0.5 h-4 w-4 shrink-0 text-red-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              <!-- Unlimited (integer 0): purple infinity -->
+              <svg
+                v-else-if="getFeatureValueType(value) === 'unlimited'"
                 class="mt-0.5 h-4 w-4 shrink-0 text-purple-500"
                 fill="none"
                 stroke="currentColor"
@@ -594,7 +607,17 @@ async function executeChangePlan(planSlug: string) {
               >
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 0C9.5 2 7 4.5 7 7.5S9.5 13 12 13s5-2.5 5-5.5S14.5 2 12 2zm0 0c2.5 0 5 2.5 5 5.5S14.5 13 12 13" />
               </svg>
-              <!-- Boolean/Default: checkmark -->
+              <!-- Numeric limit (integer N>0): blue hash -->
+              <svg
+                v-else-if="getFeatureValueType(value) === 'numeric'"
+                class="mt-0.5 h-4 w-4 shrink-0 text-blue-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+              </svg>
+              <!-- String: green checkmark -->
               <svg
                 v-else
                 class="mt-0.5 h-4 w-4 shrink-0 text-brand-500"
@@ -609,10 +632,13 @@ async function executeChangePlan(planSlug: string) {
                 <span
                   class="text-[var(--color-muted-foreground)]"
                   :class="{
-                    'inline-flex items-center ml-1.5 rounded-full px-1.5 py-0.5 text-xs font-semibold': typeof value === 'number' || String(value).match(/^\d+/),
-                    'text-purple-600 dark:text-purple-400 inline-flex items-center ml-1.5 rounded-full px-1.5 py-0.5 text-xs font-semibold': String(value).match(/unlimited|infinity/i),
+                    'text-brand-600 dark:text-brand-400 font-medium ml-1.5': getFeatureValueType(value) === 'boolean-true',
+                    'text-red-500 dark:text-red-400 font-medium ml-1.5': getFeatureValueType(value) === 'boolean-false',
+                    'text-purple-600 dark:text-purple-400 inline-flex items-center ml-1.5 rounded-full px-1.5 py-0.5 text-xs font-semibold bg-purple-50 dark:bg-purple-950/50': getFeatureValueType(value) === 'unlimited',
+                    'text-blue-600 dark:text-blue-400 inline-flex items-center ml-1.5 rounded-full px-1.5 py-0.5 text-xs font-semibold bg-blue-50 dark:bg-blue-950/50': getFeatureValueType(value) === 'numeric',
+                    'ml-1.5': getFeatureValueType(value) === 'string',
                   }"
-                >{{ value }}</span>
+                >{{ formatFeatureValue(value) }}</span>
               </div>
             </li>
           </ul>

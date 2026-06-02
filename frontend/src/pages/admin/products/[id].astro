@@ -27,7 +27,3 @@ if (!productId || isNaN(productId)) {
 >
   <ProductDetailAdmin client:only="vue" :productId={productId} />
 </AdminLayout>
-
-<script>
-  import { useAdminGuard } from "@/composables/useAdminGuard";
-</script>

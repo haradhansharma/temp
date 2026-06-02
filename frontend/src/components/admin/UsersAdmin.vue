@@ -15,6 +15,7 @@
 
 import { ref, computed, onMounted } from "vue";
 import { requireAuth, getErrorMessage } from "@/lib/auth";
+import { authHelpers } from "@/lib/api";
 import { showToast } from "@/lib/toast";
 import { adminApi, formatDateTime } from "@/lib/admin";
 import type {
@@ -153,13 +154,16 @@ onMounted(async () => {
 
 // ─── Navigation ──────────────────────────────────────────────────────────────
 
+// VUE 3 CONVENTION: Use authHelpers.navigateTo() (Astro's navigate())
+// instead of window.location.href to avoid the "querySelector null" error
+// during View Transitions. Defer with setTimeout to avoid race conditions.
 function handleRowClick(row: Record<string, unknown>) {
   const user = row as UserItem;
-  window.location.href = `/admin/users/${user.id}`;
+  setTimeout(() => authHelpers.navigateTo(`/admin/users/${user.id}`), 0);
 }
 
 function viewUser(id: number) {
-  window.location.href = `/admin/users/${id}`;
+  setTimeout(() => authHelpers.navigateTo(`/admin/users/${id}`), 0);
 }
 
 // ─── Pagination ──────────────────────────────────────────────────────────────

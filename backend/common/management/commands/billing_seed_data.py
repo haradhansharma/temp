@@ -177,9 +177,9 @@ SEED_DATA = [
                 "is_featured": False,
                 "features": {
                     "expense_tracking": "Basic",
-                    "budget_categories": "3 categories",
-                    "reports": "None",
-                    "bank_accounts": "1 linked account",
+                    "budget_categories": 3,
+                    "reports": False,
+                    "bank_accounts": 1,
                 },
                 "access_entries": [
                     {
@@ -256,9 +256,9 @@ SEED_DATA = [
                 "is_featured": True,
                 "features": {
                     "expense_tracking": "Advanced",
-                    "budget_categories": "Unlimited",
-                    "reports": "Advanced",
-                    "bank_accounts": "5 linked accounts",
+                    "budget_categories": 0,
+                    "reports": True,
+                    "bank_accounts": 5,
                 },
                 "access_entries": [
                     {
@@ -335,9 +335,9 @@ SEED_DATA = [
                 "is_featured": False,
                 "features": {
                     "expense_tracking": "Advanced + AI",
-                    "budget_categories": "Unlimited",
-                    "reports": "Advanced + AI insights",
-                    "bank_accounts": "Unlimited",
+                    "budget_categories": 0,
+                    "reports": True,
+                    "bank_accounts": 0,
                 },
                 "access_entries": [
                     {
@@ -447,10 +447,10 @@ SEED_DATA = [
                 "sort_order": 0,
                 "is_featured": False,
                 "features": {
-                    "dashboards": "Up to 2",
-                    "data_sources": "1",
-                    "real_time": "No",
-                    "data_retention": "7 days",
+                    "dashboards": 2,
+                    "data_sources": 1,
+                    "real_time": False,
+                    "data_retention": 7,
                 },
                 "access_entries": [
                     {
@@ -526,10 +526,10 @@ SEED_DATA = [
                 "sort_order": 1,
                 "is_featured": True,
                 "features": {
-                    "dashboards": "Unlimited",
-                    "data_sources": "10",
-                    "real_time": "Yes",
-                    "data_retention": "1 year",
+                    "dashboards": 0,
+                    "data_sources": 10,
+                    "real_time": True,
+                    "data_retention": 365,
                 },
                 "access_entries": [
                     {
@@ -617,10 +617,10 @@ SEED_DATA = [
                 "sort_order": 2,
                 "is_featured": False,
                 "features": {
-                    "dashboards": "Unlimited",
-                    "data_sources": "Unlimited",
-                    "real_time": "Yes",
-                    "data_retention": "Unlimited",
+                    "dashboards": 0,
+                    "data_sources": 0,
+                    "real_time": True,
+                    "data_retention": 0,
                 },
                 "access_entries": [
                     {
@@ -759,11 +759,13 @@ SEED_DATA = [
                 "sort_order": 0,
                 "is_featured": False,
                 "features": {
-                    "transactions": "Unlimited",
-                    "accounts": "Up to 3",
-                    "budgets": "1 budget",
-                    "bills": "Track bills",
-                    "goals": "1 savings goal",
+                    "transactions": 50,
+                    "accounts": 3,
+                    "budgets": 1,
+                    "bills": 5,
+                    "goals": 1,
+                    "investments": False,
+                    "insurance": False,
                     "reports": "Basic",
                 },
                 "access_entries": [
@@ -984,13 +986,14 @@ SEED_DATA = [
                 "sort_order": 1,
                 "is_featured": True,
                 "features": {
-                    "transactions": "Unlimited",
-                    "accounts": "Unlimited",
-                    "budgets": "Unlimited",
-                    "bills": "Track bills + reminders",
-                    "goals": "Unlimited goals",
-                    "investments": "Portfolio tracking",
-                    "insurance": "Policy management",
+                    "transactions": 0,
+                    "accounts": 0,
+                    "budgets": 0,
+                    "bills": 0,
+                    "goals": 0,
+                    "investments": True,
+                    "insurance": True,
+                    "reports": "Advanced",
                 },
                 "access_entries": [
                     {
@@ -1210,13 +1213,14 @@ SEED_DATA = [
                 "sort_order": 2,
                 "is_featured": False,
                 "features": {
-                    "transactions": "Unlimited + AI categorization",
-                    "accounts": "Unlimited",
-                    "budgets": "Unlimited + AI insights",
-                    "bills": "Auto-pay + reminders",
-                    "goals": "Unlimited goals",
-                    "investments": "AI-powered portfolio",
-                    "insurance": "Claims tracking",
+                    "transactions": 0,
+                    "accounts": 0,
+                    "budgets": 0,
+                    "bills": 0,
+                    "goals": 0,
+                    "investments": True,
+                    "insurance": True,
+                    "reports": "Advanced + AI insights",
                 },
                 "access_entries": [
                     {

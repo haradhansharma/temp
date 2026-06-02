@@ -11,6 +11,7 @@
 
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from "vue";
 import { requireAuth, getErrorMessage } from "@/lib/auth";
+import { authHelpers } from "@/lib/api";
 import { useSubscription } from "@/composables";
 import { showToast } from "@/lib/toast";
 import {
@@ -21,6 +22,8 @@ import {
   getStatusStyle,
   getUserCurrency,
   setUserCurrency,
+  getFeatureValueType,
+  formatFeatureValue,
 } from "@/lib/billing";
 import type {
   ProductSchema,
@@ -47,12 +50,16 @@ function storeReturnUrl(url: string | null) {
 }
 
 /** Redirect to return_url with billing_updated param */
+// VUE 3 CONVENTION: Use authHelpers.navigateTo() (Astro's navigate())
+// instead of window.location.href for internal redirects to avoid the
+// "querySelector null" error during View Transitions.
 function redirectToReturnUrl(updated: 1 | 0) {
   const url = returnUrl.value || getStoredReturnUrl();
   if (!url) return;
   storeReturnUrl(null); // Clean up
   const separator = url.includes("?") ? "&" : "?";
-  window.location.href = `${url}${separator}billing_updated=${updated}`;
+  const fullUrl = `${url}${separator}billing_updated=${updated}`;
+  setTimeout(() => authHelpers.navigateTo(fullUrl), 0);
 }
 
 const loading = ref(true);
@@ -257,26 +264,12 @@ onMounted(async () => {
       ]);
       products.value = productsData;
 
-      // Fetch user's preferred currency from auth/me (F13)
-      try {
-        const authData = await billingApi.getAuthMe();
-        if (authData?.user?.currency) {
-          const cur = authData.user.currency as string;
-          userCurrency.value = cur;
-          // Also update the global default so PlanComparison etc. benefit
-          setUserCurrency(cur);
-
-          // UX-03: Detect currency mismatch between user preference and
-          // the global default that was set by Navbar before this fetch
-          // completed (race condition recovery).
-          const prevGlobal = getUserCurrency();
-          if (prevGlobal && prevGlobal !== cur) {
-            currencyMismatch.value = true;
-            lockedCurrency.value = cur;
-          }
-        }
-      } catch {
-        // Non-critical — falls back to "USD"
+      // Get user's preferred currency from the global store (already
+      // fetched by useAuth or Navbar — no need for another API call).
+      // Previously this called billingApi.getAuthMe() redundantly.
+      const cur = getUserCurrency();
+      if (cur && cur !== "USD") {
+        userCurrency.value = cur;
       }
 
       // UX-01: Auto-load initial billing history for paid subscribers
@@ -899,12 +892,37 @@ async function loadTransactions() {
                         :key="key"
                         class="flex items-start gap-2 text-sm"
                       >
-                        <svg class="h-4 w-4 shrink-0 mt-0.5 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <!-- Boolean true: green checkmark -->
+                        <svg v-if="getFeatureValueType(value) === 'boolean-true'" class="h-4 w-4 shrink-0 mt-0.5 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                        <!-- Boolean false: red cross -->
+                        <svg v-else-if="getFeatureValueType(value) === 'boolean-false'" class="h-4 w-4 shrink-0 mt-0.5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        <!-- Unlimited (integer 0): purple infinity -->
+                        <svg v-else-if="getFeatureValueType(value) === 'unlimited'" class="h-4 w-4 shrink-0 mt-0.5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 0C9.5 2 7 4.5 7 7.5S9.5 13 12 13s5-2.5 5-5.5S14.5 2 12 2zm0 0c2.5 0 5 2.5 5 5.5S14.5 13 12 13" />
+                        </svg>
+                        <!-- Numeric limit: blue hash -->
+                        <svg v-else-if="getFeatureValueType(value) === 'numeric'" class="h-4 w-4 shrink-0 mt-0.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+                        </svg>
+                        <!-- String: green checkmark -->
+                        <svg v-else class="h-4 w-4 shrink-0 mt-0.5 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                         </svg>
                         <div class="min-w-0">
-                          <span class="font-medium text-foreground">{{ key }}</span>
-                          <span class="text-[var(--color-muted-foreground)]">: {{ value }}</span>
+                          <span class="font-medium text-foreground">{{ String(key).replace(/_/g, ' ') }}</span>
+                          <span
+                            :class="{
+                              'text-brand-600 dark:text-brand-400 font-medium ml-1': getFeatureValueType(value) === 'boolean-true',
+                              'text-red-500 dark:text-red-400 font-medium ml-1': getFeatureValueType(value) === 'boolean-false',
+                              'text-purple-600 dark:text-purple-400 rounded-full px-1.5 py-0.5 text-xs font-semibold bg-purple-50 dark:bg-purple-950/50 ml-1': getFeatureValueType(value) === 'unlimited',
+                              'text-blue-600 dark:text-blue-400 rounded-full px-1.5 py-0.5 text-xs font-semibold bg-blue-50 dark:bg-blue-950/50 ml-1': getFeatureValueType(value) === 'numeric',
+                              'text-[var(--color-muted-foreground)] ml-1': getFeatureValueType(value) === 'string',
+                            }"
+                          >{{ formatFeatureValue(value) }}</span>
                         </div>
                       </div>
                     </div>

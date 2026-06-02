@@ -27,7 +27,3 @@ if (!subscriptionId || isNaN(subscriptionId)) {
 >
   <SubscriptionDetailAdmin client:only="vue" :subscriptionId={subscriptionId} />
 </AdminLayout>
-
-<script>
-  import { useAdminGuard } from "@/composables/useAdminGuard";
-</script>

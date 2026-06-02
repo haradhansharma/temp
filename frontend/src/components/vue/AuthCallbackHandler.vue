@@ -50,7 +50,7 @@ onMounted(async () => {
     // Parse the authorization code and return URL from query params
     const params = new URLSearchParams(window.location.search);
     const code = params.get('code');
-    const returnTo = params.get('return_to') || '/dashboard';
+    let returnTo = params.get('return_to') || '/dashboard';
 
     if (!code) {
       status.value = 'error';
@@ -58,12 +58,31 @@ onMounted(async () => {
       return;
     }
 
+    // SECURITY: Validate returnTo is a relative path (prevent open redirect)
+    // Only allow paths starting with '/' and reject any URL with a protocol/domain
+    if (returnTo.startsWith('/') && !returnTo.startsWith('//') && !returnTo.includes('://')) {
+      // Safe — relative path within our app
+    } else {
+      // Unsafe — could be an external URL like https://evil.com
+      // Fall back to the default dashboard path
+      console.warn('[AuthCallback] Blocked potentially unsafe redirect:', returnTo);
+      returnTo = '/dashboard';
+    }
+
     // Exchange the one-time code for JWT tokens
     await exchangeAuthCode(code);
 
-    // Tokens are now stored in the base domain's storage.
-    // Redirect to the intended destination.
-    window.location.href = returnTo;
+    // Access token is now stored in memory; refresh token is in httpOnly cookie.
+    // VUE 3 CONVENTION: Use Astro's navigate() for SPA-like redirect
+    // instead of window.location.href which causes a full page reload
+    // and can conflict with Astro's View Transitions router.
+    try {
+      const { navigate } = await import('astro:transitions/client');
+      navigate(returnTo, { history: 'replace' });
+    } catch {
+      // Fallback: if navigate() not available (shouldn't happen)
+      window.location.href = returnTo;
+    }
   } catch (err: any) {
     status.value = 'error';
 

@@ -92,8 +92,13 @@ async function handleSubmit() {
     await confirmPasswordReset(token, form.new_password);
     done.value = true;
     showToast("Password reset successfully! Redirecting to sign in...", "success");
-    setTimeout(() => {
-      window.location.href = "/auth/login";
+    setTimeout(async () => {
+      try {
+        const { navigate } = await import("astro:transitions/client");
+        navigate("/auth/login");
+      } catch {
+        window.location.href = "/auth/login";
+      }
     }, 3000);
   } catch (err: unknown) {
     const apiErr = err as ApiError;

@@ -27,7 +27,3 @@ if (!userId || isNaN(userId)) {
 >
   <UserDetailAdmin client:only="vue" :userId={userId} />
 </AdminLayout>
-
-<script>
-  import { useAdminGuard } from "@/composables/useAdminGuard";
-</script>

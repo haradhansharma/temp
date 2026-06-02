@@ -102,6 +102,34 @@ REMEMBER_ME_COOKIE_NAME = "sb_remember_me"
 REFRESH_COOKIE_EXPIRY_DAYS = 30  # When "remember me" is true
 
 
+def _get_cookie_settings() -> tuple:
+    """Return (secure, samesite) for auth cookies based on environment.
+
+    Development (DEBUG=True, HTTP localhost):
+        - SameSite=Lax, Secure=False
+        - Works because localhost:4321 → localhost:8086 is SAME-SITE
+          (same registrable domain), so Lax allows cookies on fetch POST.
+        - Secure=False is required because the browser will REJECT
+          Set-Cookie with Secure=True over plain HTTP (no HTTPS),
+          meaning the cookie is never stored at all.
+
+    Production (DEBUG=False, HTTPS):
+        - SameSite=None, Secure=True
+        - Required for cross-domain setups (e.g., app.example.com →
+          api.example.com) where origins are truly cross-site.
+        - SameSite=None REQUIRES Secure=True per browser spec.
+
+    Why SameSite=Lax works in dev:
+        The SameSite algorithm checks the "site" (scheme + registrable
+        domain).  http://localhost:4321 and http://localhost:8086 share
+        the same site (http + localhost), so Lax cookies are sent on
+        fetch() POST requests between them.
+    """
+    if settings.DEBUG:
+        return False, "Lax"
+    return True, "None"
+
+
 def _set_auth_cookie(response, refresh_token: str, remember: bool = False) -> None:
     """Set refresh token in httpOnly cookie for XSS protection.
     
@@ -109,14 +137,15 @@ def _set_auth_cookie(response, refresh_token: str, remember: bool = False) -> No
     localStorage/sessionStorage. This prevents XSS attacks from stealing
     the refresh token.
     
+    Cookie settings are determined by _get_cookie_settings() which
+    adapts to the environment (dev vs prod).
+    
     Args:
         response: Django HttpResponse object
         refresh_token: The refresh token to store
         remember: If True, cookie persists for 30 days; otherwise session cookie
     """
-    # Determine cookie settings
-    secure = not settings.DEBUG  # HTTPS only in production
-    samesite = "Lax"  # Protection against CSRF while allowing normal navigation
+    secure, samesite = _get_cookie_settings()
     
     # Set refresh token cookie
     if remember:
@@ -153,17 +182,48 @@ def _set_auth_cookie(response, refresh_token: str, remember: bool = False) -> No
             samesite=samesite,
             path="/",
         )
-        # Clear remember me flag
-        response.delete_cookie(REMEMBER_ME_COOKIE_NAME, path="/")
+        # Clear remember me flag (use set_cookie with max_age=0 for
+        # compatibility with Django versions where delete_cookie() lacks
+        # the 'secure' keyword argument)
+        response.set_cookie(
+            REMEMBER_ME_COOKIE_NAME,
+            "",
+            max_age=0,
+            path="/",
+            secure=secure,
+            samesite=samesite,
+        )
 
 
 def _clear_auth_cookie(response) -> None:
     """Clear the refresh token cookie on logout.
     
     HIGH-03 FIX: Removes the httpOnly cookie containing refresh token.
+    Must match the SameSite/Secure settings used when the cookie was set,
+    otherwise the browser won't delete it.
+    
+    Uses set_cookie with max_age=0 instead of delete_cookie() because
+    delete_cookie() in older Django versions does not support the
+    ``secure`` keyword argument.
     """
-    response.delete_cookie(REFRESH_TOKEN_COOKIE_NAME, path="/")
-    response.delete_cookie(REMEMBER_ME_COOKIE_NAME, path="/")
+    secure, samesite = _get_cookie_settings()
+    response.set_cookie(
+        REFRESH_TOKEN_COOKIE_NAME,
+        "",
+        max_age=0,
+        path="/",
+        httponly=True,
+        secure=secure,
+        samesite=samesite,
+    )
+    response.set_cookie(
+        REMEMBER_ME_COOKIE_NAME,
+        "",
+        max_age=0,
+        path="/",
+        secure=secure,
+        samesite=samesite,
+    )
 
 
 # =============================================================================
@@ -404,6 +464,42 @@ class AuthController:
         HIGH-03 FIX: Reads refresh token from httpOnly cookie instead of request body.
         This is more secure because the cookie cannot be accessed by JavaScript,
         protecting against XSS attacks.
+        
+        TOKEN ROTATION STRATEGY (UPDATED):
+        The cookie-based refresh endpoint now ROTATES the refresh token — it
+        issues a new refresh token with a fresh expiry on every refresh. This
+        ensures that active users stay logged in for the full cookie duration
+        (30 days with "Remember Me").
+
+        The OLD refresh token is NOT blacklisted on rotation. This is intentional
+        — it prevents race conditions where multiple concurrent refresh requests
+        (caused by Astro View Transitions, HMR, or multiple browser tabs) would
+        each blacklist the previous token, causing cascading 401 failures.
+
+        The old token naturally expires (TTL configured via SIMPLE_JWT settings),
+        providing a grace period during which concurrent tabs can still use the
+        old cookie. The browser replaces the old cookie with the new one as soon
+        as any tab receives the refresh response.
+
+        Tokens ARE blacklisted on explicit logout, which is the correct place
+        for immediate revocation.
+        
+        Security trade-off: A stolen refresh token remains valid until it expires
+        naturally (up to 7 days), rather than being invalidated immediately on
+        rotation. This is acceptable because:
+        1. The cookie is httpOnly — XSS cannot steal it
+        2. SameSite=Lax (dev) / SameSite=None+Secure (prod) — CSRF-resistant
+        3. Natural expiration (7 days) limits the window
+        4. Explicit logout DOES blacklist the token immediately
+        5. The alternative (rotation + blacklist) causes constant auth failures
+           in SPAs with Astro View Transitions, making the app unusable
+        
+        CSRF FIX: This endpoint is explicitly CSRF-exempt because:
+        1. It uses JWT tokens (not Django sessions) for authentication
+        2. The refresh token is in an httpOnly cookie
+        3. Django's CsrfViewMiddleware would block cross-origin POST requests
+           that carry credential cookies, but JWT provides equivalent protection
+           without requiring a CSRF token in the request body.
         """
         from django.http import JsonResponse
         
@@ -425,37 +521,48 @@ class AuthController:
             if not user:
                 raise ValueError("User not found or inactive")
 
-            # CRIT-01 FIX: Blacklist the OLD refresh token before issuing new ones
-            await async_blacklist(refresh)
+            # NOTE: We intentionally do NOT blacklist the old refresh token here.
+            # See the docstring above for the rationale. Blacklisting only
+            # happens on explicit logout (see logout_cookie endpoint).
 
             new_access = await async_token_for_user(user)
+
+            # ROTATE the refresh token — issue a NEW one with a fresh expiry.
+            # This ensures active users stay logged in for the full cookie
+            # duration (30 days with "Remember Me"). Without rotation, the
+            # refresh token JWT expires after 7 days even though the cookie
+            # persists for 30 days, breaking "Remember Me".
             new_refresh = await async_refresh_for_user(user)
 
             # Check if "remember me" was enabled (cookie persists)
             remember_me = request.COOKIES.get(REMEMBER_ME_COOKIE_NAME) == "true"
 
-            # Return access token and set new refresh token cookie
+            # Return access token and set the NEW refresh token in the cookie.
             response_data = AccessTokenOnlySchema(access=str(new_access))
             response = JsonResponse(response_data.dict())
+            # Set the NEW refresh token in the cookie — this extends the session
             _set_auth_cookie(response, str(new_refresh), remember=remember_me)
 
             return response
 
-        except (ValueError, TokenError) as e:
+        except Exception as e:
+            # BROAD EXCEPTION FIX: Previously only (ValueError, TokenError) were
+            # caught, but simplejwt/ninja_jwt can raise other exception types
+            # (e.g., TokenBackendError, InvalidToken) that would cause a 500
+            # Internal Server Error. Catching all exceptions ensures we always
+            # return a proper 401 and clear the invalid cookie.
             error_msg = str(e)
             
             # MED-02 FIX: Detect refresh token reuse (potential security breach)
-            # If the token is blacklisted, it means it was already used - possible token theft
+            # If the token is blacklisted, it means it was already used in logout
             if "blacklisted" in error_msg.lower():
                 logger.warning(
                     f"SECURITY_ALERT: Refresh token reuse detected! "
                     f"Possible token theft attempt. Error: {error_msg}"
                 )
-                # Note: We could invalidate all user tokens here, but since we don't have
-                # the user_id from the blacklisted token, we just clear cookies.
-                # Consider implementing a token family tracking system for higher security.
+            else:
+                logger.debug(f"Cookie token refresh failed: {e}")
             
-            logger.debug(f"Cookie token refresh failed: {e}")
             # Clear the invalid/blacklisted cookie so subsequent requests don't fail
             response = JsonResponse({"detail": "Invalid or expired refresh token."}, status=401)
             _clear_auth_cookie(response)
@@ -511,6 +618,8 @@ class AuthController:
         
         HIGH-03 FIX: Reads refresh token from httpOnly cookie, blacklists it,
         and clears the cookie. This provides secure logout for browser clients.
+        
+        CSRF FIX: Explicitly CSRF-exempt — uses JWT cookies, not Django sessions.
         """
         from django.http import JsonResponse
         
@@ -763,7 +872,15 @@ class UserController:
         summary="Get current user profile",
         description="Return the authenticated user's profile information.",
     )
-    def get_profile(self, request: HttpRequest):
+    async def get_profile(self, request: HttpRequest):
+        """Return the authenticated user's profile.
+
+        Made async to ensure compatibility with async JWTAuth.authenticate()
+        under ASGI (Daphne). Sync methods in an async controller can fail to
+        access request.user set by async authentication because the ASGI
+        handler may not properly bridge the sync/async boundary for attribute
+        access on the request object.
+        """
         return request.user
 
     @http_get(

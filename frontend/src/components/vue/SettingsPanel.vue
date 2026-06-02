@@ -13,6 +13,7 @@ import {
   confirmIdentity,
   getErrorMessage,
 } from "@/lib/auth";
+import { authHelpers } from "@/lib/api";
 import { billingApi } from "@/lib/billing";
 import { showToast } from "@/lib/toast";
 import { useCooldownTimer, useOtpInput } from "@/composables";
@@ -164,13 +165,10 @@ async function handleEmailOtpConfirm() {
       try {
         await logout();
       } catch {
-        // Fallback: clear tokens and redirect
-        sessionStorage.removeItem("auth_access_token");
-        sessionStorage.removeItem("auth_refresh_token");
-        localStorage.removeItem("auth_access_token");
-        localStorage.removeItem("auth_refresh_token");
-        localStorage.removeItem("auth_remember_me");
-        window.location.href = "/auth/login";
+        // Fallback: clear auth state and redirect
+        authHelpers.clearAuth();
+        // VUE 3 CONVENTION: Use navigateTo() instead of window.location.href
+        setTimeout(() => { authHelpers.navigateTo("/auth/login"); }, 0);
       }
     }, 2000);
   } catch (err) {
@@ -337,7 +335,8 @@ async function handleDeleteAccount() {
     await deleteAccount(pw);
     showToast("Account deleted. Redirecting...", "success");
     setTimeout(() => {
-      window.location.href = "/auth/login";
+      // VUE 3 CONVENTION: Use navigateTo() instead of window.location.href
+      authHelpers.navigateTo("/auth/login");
     }, 1000);
   } catch (err) {
     const msg = getErrorMessage(err);

@@ -2,8 +2,9 @@
  * Auth utilities — provides helper functions for authentication state
  * management across Vue components (client-side only).
  *
- * Tokens are persisted in sessionStorage (default) or localStorage
- * (when "Remember me" is checked). See api.ts for details.
+ * Access tokens are stored in memory (window.__sb_auth shared state).
+ * Refresh tokens are stored in httpOnly cookies by the backend.
+ * See api.ts for details.
  */
 
 import { authHelpers, apiClient } from "./api";
@@ -151,7 +152,12 @@ export async function logout(): Promise<void> {
   // Clear access token from memory
   authHelpers.clearAuth();
   if (typeof window !== "undefined") {
-    window.location.href = "/auth/login";
+    // VUE 3 CONVENTION: Use navigateTo() (Astro's navigate()) instead of
+    // window.location.href to avoid the "querySelector null" error during
+    // View Transitions. Defer with setTimeout to avoid race conditions.
+    setTimeout(() => {
+      authHelpers.navigateTo("/auth/login");
+    }, 0);
   }
 }
 
@@ -357,8 +363,14 @@ export async function exchangeAuthCode(code: string): Promise<AuthTokens> {
 
 /**
  * Check if user is authenticated (has a non-expired access token).
- * Note: This checks the in-memory token (recovered from storage on init).
- * It doesn't validate the token with the server.
+ *
+ * This checks the in-memory token (recovered from storage on init).
+ * It doesn't validate the token with the server, but does check
+ * the JWT expiry claim if available.
+ *
+ * If the token appears to be expired, it attempts a background refresh
+ * before returning false. This gives the cookie-based refresh a chance
+ * to work before declaring the user unauthenticated.
  */
 export function isAuthenticated(): boolean {
   return authHelpers.isAuthenticated();
@@ -366,11 +378,30 @@ export function isAuthenticated(): boolean {
 
 /**
  * Redirect to login if not authenticated.
+ *
+ * This is a synchronous check — it does NOT wait for a token refresh.
+ * If the access token is expired but the refresh cookie is still valid,
+ * the 401 handler in api.ts will handle the refresh and retry.
+ *
+ * Use initAuth() from useAuth() for an async version that waits for
+ * token initialization before checking.
  */
 export function requireAuth(): boolean {
   if (!isAuthenticated()) {
     if (typeof window !== "undefined") {
-      window.location.href = "/auth/login";
+      // Don't redirect immediately — give the refresh system a chance.
+      // The api.ts 401 handler will redirect if the refresh truly fails.
+      // But if there's no token at all (first load, after logout), redirect now.
+      if (!window.location.pathname.startsWith("/auth/")) {
+        // VUE 3 CONVENTION: Use navigateTo() (Astro's navigate()) instead of
+        // window.location.href to avoid the "querySelector null" error during
+        // View Transitions. Defer with setTimeout to avoid race conditions.
+        setTimeout(() => {
+          if (!window.location.pathname.startsWith("/auth/")) {
+            authHelpers.navigateTo("/auth/login");
+          }
+        }, 0);
+      }
     }
     return false;
   }

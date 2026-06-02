@@ -1,14 +1,13 @@
 <script setup lang="ts">
 // Plans landing page — shows all products/domains with their plans
 import { ref, computed, onMounted } from "vue";
-import { requireAuth, getErrorMessage, getCurrentUser } from "@/lib/auth";
+import { requireAuth, getErrorMessage } from "@/lib/auth";
 import { useSubscription } from "@/composables";
 import {
   billingApi,
   formatPrice,
   formatCycle,
   getUserCurrency,
-  setUserCurrency,
 } from "@/lib/billing";
 import type { ProductDetailSchema } from "@/lib/billing";
 import { showToast } from "@/lib/toast";
@@ -47,16 +46,7 @@ onMounted(async () => {
   if (!requireAuth()) return;
 
   try {
-    // Fetch user currency
-    try {
-      const user = await getCurrentUser();
-      if (user?.currency) {
-        setUserCurrency(user.currency);
-      }
-    } catch {
-      // Non-critical
-    }
-
+    // Currency is already set by useAuth or Navbar — no separate API call needed.
     const currency = getUserCurrency();
 
     // Fetch all products with their plans in parallel

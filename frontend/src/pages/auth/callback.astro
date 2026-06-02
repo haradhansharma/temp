@@ -11,7 +11,7 @@
  *
  * This callback page then:
  *   3. Exchanges the code for JWT tokens via POST /auth/token/exchange
- *   4. Stores the tokens in the base domain's localStorage/sessionStorage
+ *   4. Stores the access token in memory; refresh token is set as httpOnly cookie by the backend
  *   5. Redirects to the return_to path (defaults to /dashboard)
  *
  * The authorization code:

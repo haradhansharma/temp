@@ -16,6 +16,7 @@
 
 import { ref, computed, onMounted, watch } from "vue";
 import { requireAuth, getErrorMessage } from "@/lib/auth";
+import { authHelpers } from "@/lib/api";
 import { showToast } from "@/lib/toast";
 import { adminApi, formatDateTime } from "@/lib/admin";
 import type {
@@ -195,13 +196,16 @@ watch(productFilter, async (newProductId) => {
 
 // ─── Navigation ──────────────────────────────────────────────────────────────
 
+// VUE 3 CONVENTION: Use authHelpers.navigateTo() (Astro's navigate())
+// instead of window.location.href to avoid the "querySelector null" error
+// during View Transitions. Defer with setTimeout to avoid race conditions.
 function handleRowClick(row: Record<string, unknown>) {
   const subscription = row as SubscriptionItem;
-  window.location.href = `/admin/subscriptions/${subscription.id}`;
+  setTimeout(() => authHelpers.navigateTo(`/admin/subscriptions/${subscription.id}`), 0);
 }
 
 function viewSubscription(id: number) {
-  window.location.href = `/admin/subscriptions/${id}`;
+  setTimeout(() => authHelpers.navigateTo(`/admin/subscriptions/${id}`), 0);
 }
 
 // ─── Pagination ──────────────────────────────────────────────────────────────

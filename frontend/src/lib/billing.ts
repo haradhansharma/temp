@@ -29,7 +29,7 @@ export interface PlanSchema {
   currency: string;
   billing_cycle: "monthly" | "yearly" | "lifetime";
   trial_days: number;
-  features: Record<string, string>;
+  features: Record<string, string | number | boolean>;
   sort_order: number;
   is_active: boolean;
   is_featured: boolean;
@@ -126,7 +126,7 @@ export interface ProrationPreviewOutputSchema {
   next_billing: number;
   currency: string;
   preview_token: string | null;
-  change_type: 'upgrade' | 'downgrade' | 'lateral';
+  change_type: "upgrade" | "downgrade" | "lateral";
   is_upgrade: boolean;
 }
 
@@ -134,8 +134,8 @@ export interface ConfirmPlanChangeOutputSchema {
   plan_name: string;
   plan_slug: string;
   status: string;
-  change_type: 'upgrade' | 'downgrade' | 'lateral';
-  effective_when: 'immediately' | 'next_billing_cycle';
+  change_type: "upgrade" | "downgrade" | "lateral";
+  effective_when: "immediately" | "next_billing_cycle";
   amount_charged: number;
   currency: string;
 }
@@ -178,10 +178,15 @@ export const billingApi = {
     return apiClient.get<ProductSchema[]>("/billing/products");
   },
 
-  async getProductBySlug(slug: string, userCurrency?: string): Promise<ProductDetailSchema> {
+  async getProductBySlug(
+    slug: string,
+    userCurrency?: string,
+  ): Promise<ProductDetailSchema> {
     const params: Record<string, string> = {};
     if (userCurrency) params.currency = userCurrency;
-    return apiClient.get<ProductDetailSchema>(`/billing/products/${slug}`, { params });
+    return apiClient.get<ProductDetailSchema>(`/billing/products/${slug}`, {
+      params,
+    });
   },
 
   // ── Protected endpoints ──
@@ -194,46 +199,87 @@ export const billingApi = {
     return apiClient.get<AuthMeSchema>("/billing/auth/me", { headers });
   },
 
-  async getSubscriptions(limit?: number, offset?: number): Promise<SubscriptionOutputSchema[]> {
+  async getSubscriptions(
+    limit?: number,
+    offset?: number,
+  ): Promise<SubscriptionOutputSchema[]> {
     const params: Record<string, string | number> = {};
     if (limit) params.limit = limit;
     if (offset) params.offset = offset;
-    const result = await apiClient.get<{ items: SubscriptionOutputSchema[] }>("/billing/subscriptions", { params });
+    const result = await apiClient.get<{ items: SubscriptionOutputSchema[] }>(
+      "/billing/subscriptions",
+      { params },
+    );
     return result.items || result;
   },
 
   async syncSubscriptions(): Promise<SubscriptionOutputSchema[]> {
-    return apiClient.post<SubscriptionOutputSchema[]>("/billing/subscriptions/sync");
+    return apiClient.post<SubscriptionOutputSchema[]>(
+      "/billing/subscriptions/sync",
+    );
   },
 
-  async getSubscriptionDetail(productSlug: string): Promise<SubscriptionDetailSchema> {
-    return apiClient.get<SubscriptionDetailSchema>(`/billing/subscriptions/${productSlug}`);
+  async getSubscriptionDetail(
+    productSlug: string,
+  ): Promise<SubscriptionDetailSchema> {
+    return apiClient.get<SubscriptionDetailSchema>(
+      `/billing/subscriptions/${productSlug}`,
+    );
   },
 
-  async cancelSubscription(productSlug: string, reason?: string): Promise<{ message: string }> {
+  async cancelSubscription(
+    productSlug: string,
+    reason?: string,
+  ): Promise<{ message: string }> {
     const params: Record<string, string> = {};
     if (reason) params.reason = reason;
-    return apiClient.post<{ message: string }>(`/billing/subscriptions/${productSlug}/cancel`, undefined, { params });
+    return apiClient.post<{ message: string }>(
+      `/billing/subscriptions/${productSlug}/cancel`,
+      undefined,
+      { params },
+    );
   },
 
-  async reactivateSubscription(productSlug: string): Promise<{ message: string }> {
-    return apiClient.post<{ message: string }>(`/billing/subscriptions/${productSlug}/reactivate`);
+  async reactivateSubscription(
+    productSlug: string,
+  ): Promise<{ message: string }> {
+    return apiClient.post<{ message: string }>(
+      `/billing/subscriptions/${productSlug}/reactivate`,
+    );
   },
 
-  async changePlan(productSlug: string, planSlug: string, prorationBehavior: string = "create_prorations"): Promise<{ message: string }> {
-    const body: ChangePlanInputSchema = { plan_slug: planSlug, proration_behavior: prorationBehavior };
+  async changePlan(
+    productSlug: string,
+    planSlug: string,
+    prorationBehavior: string = "create_prorations",
+  ): Promise<{ message: string }> {
+    const body: ChangePlanInputSchema = {
+      plan_slug: planSlug,
+      proration_behavior: prorationBehavior,
+    };
     return apiClient.post<{ message: string }>(
       `/billing/subscriptions/${productSlug}/change-plan`,
       body,
     );
   },
 
-  async createCheckout(productSlug: string, planSlug: string, billingCycle?: string, tosAccepted?: boolean, returnUrl?: string): Promise<{ checkout_url: string | null; reactivated: boolean }> {
-    const body: CheckoutInputSchema = { plan_slug: planSlug, billing_cycle: billingCycle, tos_accepted: tosAccepted, return_url: returnUrl };
-    return apiClient.post<{ checkout_url: string | null; reactivated: boolean }>(
-      `/billing/subscriptions/${productSlug}/checkout`,
-      body,
-    );
+  async createCheckout(
+    productSlug: string,
+    planSlug: string,
+    billingCycle?: string,
+    tosAccepted?: boolean,
+    returnUrl?: string,
+  ): Promise<{ checkout_url: string | null; reactivated: boolean }> {
+    const body: CheckoutInputSchema = {
+      plan_slug: planSlug,
+      billing_cycle: billingCycle,
+      tos_accepted: tosAccepted,
+      return_url: returnUrl,
+    };
+    return apiClient.post<{
+      checkout_url: string | null;
+      reactivated: boolean;
+    }>(`/billing/subscriptions/${productSlug}/checkout`, body);
   },
 
   async confirmCheckout(sessionId: string): Promise<{
@@ -243,24 +289,38 @@ export const billingApi = {
     trial_end: string | null;
     current_period_end: string | null;
   }> {
-    return apiClient.post(`/billing/checkout/confirm`, { session_id: sessionId });
+    return apiClient.post(`/billing/checkout/confirm`, {
+      session_id: sessionId,
+    });
   },
 
-  async createPortalSession(returnUrl?: string): Promise<{ portal_url: string }> {
-    const params = returnUrl ? `?return_url=${encodeURIComponent(returnUrl)}` : "";
+  async createPortalSession(
+    returnUrl?: string,
+  ): Promise<{ portal_url: string }> {
+    const params = returnUrl
+      ? `?return_url=${encodeURIComponent(returnUrl)}`
+      : "";
     return apiClient.post<{ portal_url: string }>(`/billing/portal${params}`);
   },
 
   // ── Proration Preview ──
 
-  async previewPlanChange(productSlug: string, planSlug: string, prorationBehavior: string = "create_prorations"): Promise<ProrationPreviewOutputSchema> {
+  async previewPlanChange(
+    productSlug: string,
+    planSlug: string,
+    prorationBehavior: string = "create_prorations",
+  ): Promise<ProrationPreviewOutputSchema> {
     return apiClient.post<ProrationPreviewOutputSchema>(
       `/billing/subscriptions/${productSlug}/preview-plan-change`,
       { plan_slug: planSlug, proration_behavior: prorationBehavior },
     );
   },
 
-  async confirmPlanChange(productSlug: string, planSlug: string, previewToken: string): Promise<ConfirmPlanChangeOutputSchema> {
+  async confirmPlanChange(
+    productSlug: string,
+    planSlug: string,
+    previewToken: string,
+  ): Promise<ConfirmPlanChangeOutputSchema> {
     return apiClient.post<ConfirmPlanChangeOutputSchema>(
       `/billing/subscriptions/${productSlug}/confirm-plan-change`,
       { plan_slug: planSlug, preview_token: previewToken },
@@ -269,7 +329,10 @@ export const billingApi = {
 
   // ── Transaction History (UX-05: user-facing endpoint) ──────────
 
-  async getTransactionHistory(limit: number = 25, startingAfter?: string): Promise<{
+  async getTransactionHistory(
+    limit: number = 25,
+    startingAfter?: string,
+  ): Promise<{
     transactions: TransactionItemSchema[];
     has_more: boolean;
     currency: string;
@@ -297,7 +360,6 @@ export const billingApi = {
   }> {
     return apiClient.get("/billing/export-data");
   },
-
 };
 
 // ─── User Currency Store (F13) ──────────────────────────────────────────────
@@ -310,7 +372,8 @@ let _userCurrency: string = "USD";
  * Falls back to "USD" if the profile has no currency field.
  */
 export function setUserCurrency(currency: string | null | undefined): void {
-  _userCurrency = (currency && currency.length === 3) ? currency.toUpperCase() : "USD";
+  _userCurrency =
+    currency && currency.length === 3 ? currency.toUpperCase() : "USD";
 }
 
 /**
@@ -336,9 +399,11 @@ export function getUserCurrency(): string {
  */
 export function formatPrice(cents: number, currency?: string | null): string {
   if (cents === 0) return "Free";
-  const effectiveCurrency = (currency && currency.length === 3) ? currency : _userCurrency;
+  const effectiveCurrency =
+    currency && currency.length === 3 ? currency : _userCurrency;
   const amount = cents / 100;
-  const locale = typeof navigator !== "undefined" ? navigator.language : "en-US";
+  const locale =
+    typeof navigator !== "undefined" ? navigator.language : "en-US";
   return new Intl.NumberFormat(locale, {
     style: "currency",
     currency: effectiveCurrency.toUpperCase(),
@@ -361,14 +426,42 @@ export function formatCycle(cycle: string): string {
 /**
  * Get status color classes for subscription status badge.
  */
-export function getStatusStyle(status: string): { bg: string; text: string; dot: string } {
+export function getStatusStyle(status: string): {
+  bg: string;
+  text: string;
+  dot: string;
+} {
   const styles: Record<string, { bg: string; text: string; dot: string }> = {
-    active: { bg: "bg-brand-50 dark:bg-brand-950/50", text: "text-brand-700 dark:text-brand-300", dot: "bg-brand-500" },
-    trialing: { bg: "bg-blue-50 dark:bg-blue-950/50", text: "text-blue-700 dark:text-blue-300", dot: "bg-blue-500" },
-    past_due: { bg: "bg-yellow-50 dark:bg-yellow-950/50", text: "text-yellow-700 dark:text-yellow-300", dot: "bg-yellow-500" },
-    canceled: { bg: "bg-orange-50 dark:bg-orange-950/50", text: "text-orange-700 dark:text-orange-300", dot: "bg-orange-500" },
-    paused: { bg: "bg-gray-50 dark:bg-gray-950/50", text: "text-gray-700 dark:text-gray-300", dot: "bg-gray-500" },
-    expired: { bg: "bg-red-50 dark:bg-red-950/50", text: "text-red-700 dark:text-red-300", dot: "bg-red-500" },
+    active: {
+      bg: "bg-brand-50 dark:bg-brand-950/50",
+      text: "text-brand-700 dark:text-brand-300",
+      dot: "bg-brand-500",
+    },
+    trialing: {
+      bg: "bg-blue-50 dark:bg-blue-950/50",
+      text: "text-blue-700 dark:text-blue-300",
+      dot: "bg-blue-500",
+    },
+    past_due: {
+      bg: "bg-yellow-50 dark:bg-yellow-950/50",
+      text: "text-yellow-700 dark:text-yellow-300",
+      dot: "bg-yellow-500",
+    },
+    canceled: {
+      bg: "bg-orange-50 dark:bg-orange-950/50",
+      text: "text-orange-700 dark:text-orange-300",
+      dot: "bg-orange-500",
+    },
+    paused: {
+      bg: "bg-gray-50 dark:bg-gray-950/50",
+      text: "text-gray-700 dark:text-gray-300",
+      dot: "bg-gray-500",
+    },
+    expired: {
+      bg: "bg-red-50 dark:bg-red-950/50",
+      text: "text-red-700 dark:text-red-300",
+      dot: "bg-red-500",
+    },
   };
   return styles[status] || styles.expired;
 }
@@ -383,10 +476,80 @@ export function getStatusStyle(status: string): { bg: string; text: string; dot:
  */
 export function formatDate(dateStr: string | null | undefined): string {
   if (!dateStr) return "—";
-  const locale = typeof navigator !== "undefined" ? navigator.language : "en-US";
+  const locale =
+    typeof navigator !== "undefined" ? navigator.language : "en-US";
   return new Date(dateStr).toLocaleDateString(locale, {
     year: "numeric",
     month: "short",
     day: "numeric",
   });
+}
+
+// ─── Feature Value Formatting ────────────────────────────────────────────────
+
+/**
+ * Feature value type classification for display rendering.
+ *
+ * Features values in PlanSchema.features can be boolean, integer, or string:
+ *   - boolean true  → shown as "True" with green checkmark
+ *   - boolean false → shown as "False" with red cross
+ *   - integer 0     → shown as "Unlimited" with purple infinity icon
+ *   - integer N>0   → shown as the number with blue numeric badge
+ *   - string        → shown as-is with green checkmark
+ */
+export type FeatureValueType =
+  | "boolean-true"
+  | "boolean-false"
+  | "unlimited"
+  | "numeric"
+  | "string";
+
+/**
+ * Classify a feature value's type for display rendering.
+ * Handles both proper JS types (boolean, number) and legacy string patterns
+ * ("true", "false", "Unlimited", "0") for backward compatibility.
+ */
+export function getFeatureValueType(
+  value: string | number | boolean,
+): FeatureValueType {
+  if (typeof value === "boolean") {
+    return value ? "boolean-true" : "boolean-false";
+  }
+  if (typeof value === "number") {
+    return value === 0 ? "unlimited" : "numeric";
+  }
+  // String: check for special patterns for backward compatibility
+  const str = String(value).toLowerCase();
+  if (str === "true") return "boolean-true";
+  if (str === "false") return "boolean-false";
+  if (str === "unlimited" || str === "infinity") return "unlimited";
+  if (str.match(/^\d+$/)) {
+    const num = parseInt(str, 10);
+    return num === 0 ? "unlimited" : "numeric";
+  }
+  return "string";
+}
+
+/**
+ * Format a feature value for display according to its type:
+ *   - boolean true  → "True"
+ *   - boolean false → "False"
+ *   - integer 0     → "Unlimited"
+ *   - integer N>0   → the number as string (e.g. "50")
+ *   - string        → as-is
+ */
+export function formatFeatureValue(value: string | number | boolean): string {
+  const type = getFeatureValueType(value);
+  switch (type) {
+    case "boolean-true":
+      return "True";
+    case "boolean-false":
+      return "False";
+    case "unlimited":
+      return "Unlimited";
+    case "numeric":
+      return String(value);
+    case "string":
+      return String(value);
+  }
 }

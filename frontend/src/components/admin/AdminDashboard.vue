@@ -15,6 +15,7 @@
 
 import { ref, computed, onMounted } from "vue";
 import { requireAuth, getErrorMessage } from "@/lib/auth";
+import { useAdminGuard } from "@/composables/useAdminGuard";
 import { showToast } from "@/lib/toast";
 import {
   adminApi,
@@ -31,6 +32,11 @@ import type {
 import AdminPageHeader from "@/components/admin/AdminPageHeader.vue";
 import AdminStatsCard from "@/components/admin/AdminStatsCard.vue";
 import AdminAuditTimeline from "@/components/admin/AdminAuditTimeline.vue";
+
+// ─── Admin Guard ──────────────────────────────────────────────────────────────
+// SECURITY: Verify user is staff/owner/admin before loading any data.
+// useAdminGuard redirects non-admin users to /dashboard automatically.
+const { isAuthorized, isLoading: adminGuardLoading } = useAdminGuard();
 
 // ─── State ───────────────────────────────────────────────────────────────────
 
@@ -83,6 +89,10 @@ async function fetchDashboardData() {
 }
 
 onMounted(async () => {
+  // Wait for admin guard to complete — if not authorized, it redirects
+  // Use a small delay to let the guard's onMounted async check complete
+  await new Promise((resolve) => setTimeout(resolve, 100));
+  if (!isAuthorized.value) return;
   if (!requireAuth()) return;
   await fetchDashboardData();
 });

@@ -3,8 +3,13 @@
  *
  * Checks if the current user is staff (is_staff or owner/admin role).
  * If not, redirects to /dashboard. This is the primary admin route
- * guard since tokens are stored in browser sessionStorage/localStorage
+ * guard since tokens are stored client-side (window.__sb_auth + httpOnly cookie)
  * and cannot be accessed server-side.
+ *
+ * VUE 3 CONVENTION: Navigation uses authHelpers.navigateTo() (Astro's
+ * navigate() from 'astro:transitions') instead of window.location.href,
+ * deferred with setTimeout(0) to avoid the "querySelector null" error
+ * during View Transitions.
  *
  * Usage in admin page components:
  *   <script setup>
@@ -33,7 +38,7 @@ export function useAdminGuard() {
 
   onMounted(async () => {
     try {
-      const { apiClient } = await import("@/lib/api");
+      const { apiClient, authHelpers } = await import("@/lib/api");
       const user = await apiClient.get<AdminUser>("/users/me");
 
       const hasAccess =
@@ -46,11 +51,18 @@ export function useAdminGuard() {
         adminUser.value = user;
       } else {
         // Not authorized — redirect to user dashboard
-        window.location.href = "/dashboard";
+        // VUE 3 CONVENTION: Use navigateTo() deferred with setTimeout
+        setTimeout(() => {
+          authHelpers.navigateTo("/dashboard");
+        }, 0);
       }
     } catch {
       // Not authenticated — redirect to login
-      window.location.href = "/auth/login";
+      // VUE 3 CONVENTION: Use navigateTo() deferred with setTimeout
+      const { authHelpers } = await import("@/lib/api");
+      setTimeout(() => {
+        authHelpers.navigateTo("/auth/login");
+      }, 0);
     } finally {
       isLoading.value = false;
     }

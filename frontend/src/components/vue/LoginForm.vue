@@ -49,8 +49,17 @@ async function handleSubmit() {
   try {
     await login({ email: form.email.trim(), password: form.password, remember: form.remember });
     showToast("Welcome back! Redirecting to dashboard...", "success");
-    setTimeout(() => {
-      window.location.href = "/dashboard";
+    // VUE 3 CONVENTION: Use Astro's navigate() for SPA-like redirect
+    // instead of window.location.href which causes full page reload
+    // and can conflict with Astro's View Transitions router.
+    setTimeout(async () => {
+      try {
+        const { navigate } = await import("astro:transitions/client");
+        navigate("/dashboard");
+      } catch {
+        // Fallback: full page reload if navigate() unavailable
+        window.location.href = "/dashboard";
+      }
     }, 800);
   } catch (err: unknown) {
     const apiErr = err as ApiError;

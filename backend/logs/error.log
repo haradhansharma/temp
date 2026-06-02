@@ -741,3 +741,656 @@ WARNING 2026-06-01 20:15:43,144 django.request django-main-thread 13119939096736
 WARNING 2026-06-01 20:15:43,157 django.request asyncio_0 131199260251712 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 7391 Unauthorized: /api/v1/auth/token/refresh-cookie
 WARNING 2026-06-01 20:15:55,476 django.request django-main-thread 131199390967360 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 7391 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
 WARNING 2026-06-01 20:15:55,489 django.request asyncio_1 131199250810432 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 7391 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 20:23:00,240 django.request django-main-thread 131199390967360 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 7391 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 20:23:00,244 django.request asyncio_0 131199260251712 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 7391 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 20:24:10,262 django.request asyncio_0 131199260251712 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 7391 Not Found: /media/avatars/2026/05/avatar.png
+WARNING 2026-06-01 20:24:12,369 django.request asyncio_1 131199250810432 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 7391 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 20:24:12,479 django.request asyncio_0 131199260251712 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 7391 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 20:24:12,492 django.request asyncio_1 131199250810432 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 7391 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 20:24:12,531 django.request asyncio_0 131199260251712 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 7391 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 20:24:14,780 django.request django-main-thread 131199390967360 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 7391 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 20:24:14,817 django.request asyncio_1 131199250810432 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 7391 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 20:24:14,905 django.request asyncio_0 131199260251712 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 7391 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 20:24:14,941 django.request asyncio_1 131199250810432 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 7391 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 20:24:14,960 django.request asyncio_0 131199260251712 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 7391 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 20:24:15,011 django.request django-main-thread 131199390967360 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 7391 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 20:24:15,036 django.request asyncio_1 131199250810432 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 7391 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 20:26:48,781 django.request django-main-thread 131199390967360 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 7391 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 20:26:48,785 django.request asyncio_0 131199260251712 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 7391 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 20:38:20,198 django.request asyncio_0 131199260251712 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 7391 Not Found: /media/avatars/2026/05/avatar.png
+WARNING 2026-06-01 20:38:27,637 django.request asyncio_0 131199260251712 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 7391 Not Found: /media/avatars/2026/05/avatar.png
+WARNING 2026-06-01 20:38:32,010 django.request asyncio_1 131199250810432 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 7391 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 20:38:32,095 django.request asyncio_0 131199260251712 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 7391 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 20:38:32,128 django.request asyncio_1 131199250810432 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 7391 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 20:38:32,162 django.request django-main-thread 131199390967360 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 7391 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 20:38:32,176 django.request asyncio_0 131199260251712 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 7391 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 20:38:32,212 django.request asyncio_1 131199250810432 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 7391 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 20:38:32,303 django.request django-main-thread 131199390967360 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 7391 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 20:38:32,308 django.request asyncio_0 131199260251712 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 7391 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 20:38:58,501 django.request django-main-thread 131199390967360 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 7391 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 20:38:58,506 django.request asyncio_1 131199250810432 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 7391 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 20:38:58,644 django.request asyncio_0 131199260251712 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 7391 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 21:01:32,048 django.request django-main-thread 131199390967360 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 7391 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 21:01:32,056 django.request asyncio_1 131199250810432 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 7391 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 21:04:37,079 django.request asyncio_1 131199250810432 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 7391 Not Found: /media/avatars/2026/05/avatar.png
+WARNING 2026-06-01 21:04:40,577 django.request asyncio_0 131199260251712 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 7391 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 21:04:40,812 django.request asyncio_1 131199250810432 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 7391 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 21:04:40,812 django.request asyncio_0 131199260251712 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 7391 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 21:04:40,861 django.request asyncio_1 131199250810432 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 7391 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 21:04:40,934 django.request django-main-thread 131199390967360 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 7391 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 21:04:40,946 django.request asyncio_0 131199260251712 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 7391 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 21:05:36,907 django.request django-main-thread 135371886368320 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 14008 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 21:05:36,923 django.request asyncio_0 135371778156096 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14008 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 21:05:37,050 django.request asyncio_0 135371778156096 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14008 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 21:05:37,098 django.request asyncio_0 135371778156096 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14008 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 21:05:37,158 django.request django-main-thread 135371886368320 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 14008 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 21:05:37,167 django.request asyncio_0 135371778156096 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14008 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 21:05:37,173 django.request asyncio_0 135371778156096 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14008 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 21:05:53,425 django.request asyncio_0 135371778156096 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14008 Not Found: /media/avatars/2026/05/avatar.png
+WARNING 2026-06-01 21:06:02,422 django.request asyncio_0 135371778156096 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14008 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 21:06:02,744 django.request asyncio_0 135371778156096 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14008 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 21:06:02,777 django.request asyncio_0 135371778156096 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14008 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 21:06:02,799 django.request asyncio_0 135371778156096 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14008 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 21:06:02,877 django.request django-main-thread 135371886368320 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 14008 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 21:06:02,881 django.request asyncio_0 135371778156096 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14008 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 21:06:38,890 django.request django-main-thread 135371886368320 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 14008 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 21:06:38,902 django.request asyncio_0 135371778156096 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14008 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 21:06:38,973 django.request asyncio_0 135371778156096 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14008 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 21:06:49,669 django.request django-main-thread 135371886368320 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 14008 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 21:06:49,683 django.request asyncio_0 135371778156096 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14008 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 21:06:53,968 django.request django-main-thread 135371886368320 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 14008 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 21:06:53,973 django.request asyncio_0 135371778156096 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14008 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 21:06:57,118 django.request django-main-thread 135371886368320 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 14008 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 21:06:57,131 django.request asyncio_0 135371778156096 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14008 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 21:06:57,264 django.request asyncio_0 135371778156096 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14008 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 21:06:57,266 django.request asyncio_1 135371751929408 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14008 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 21:07:04,767 django.request django-main-thread 135371886368320 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 14008 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 21:07:04,779 django.request asyncio_0 135371778156096 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14008 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 21:07:10,243 django.request django-main-thread 135371886368320 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 14008 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 21:07:10,287 django.request asyncio_1 135371751929408 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14008 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 21:07:13,451 django.request django-main-thread 135371886368320 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 14008 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 21:07:13,457 django.request asyncio_0 135371778156096 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14008 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 21:07:13,635 django.request asyncio_1 135371751929408 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14008 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 21:07:13,687 django.request django-main-thread 135371886368320 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 14008 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 21:22:19,076 django.request asyncio_1 135371751929408 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14008 Not Found: /media/avatars/2026/05/avatar.png
+WARNING 2026-06-01 21:22:21,353 django.request asyncio_0 135371778156096 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14008 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 21:22:21,443 django.request asyncio_1 135371751929408 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14008 Unauthorized: /api/v1/billing/subscriptions
+WARNING 2026-06-01 21:22:21,447 django.request asyncio_0 135371778156096 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14008 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 21:22:21,496 django.request asyncio_1 135371751929408 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14008 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 21:22:21,536 django.request django-main-thread 135371886368320 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 14008 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 21:22:21,540 django.request asyncio_0 135371778156096 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14008 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 21:23:36,648 django.request django-main-thread 135371886368320 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 14008 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 21:23:36,653 django.request asyncio_1 135371751929408 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14008 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 21:23:37,007 django.request asyncio_0 135371778156096 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14008 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 21:23:37,024 django.request asyncio_1 135371751929408 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14008 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 21:23:37,055 django.request asyncio_0 135371778156096 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14008 Unauthorized: /api/v1/billing/subscriptions
+WARNING 2026-06-01 21:23:37,346 django.request django-main-thread 135371886368320 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 14008 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 21:23:37,350 django.request asyncio_1 135371751929408 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14008 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 21:25:07,205 django.request asyncio_1 135371751929408 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14008 Not Found: /media/avatars/2026/05/avatar.png
+WARNING 2026-06-01 21:25:10,096 django.request asyncio_0 135371778156096 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14008 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 21:25:10,190 django.request asyncio_1 135371751929408 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14008 Unauthorized: /api/v1/billing/subscriptions
+WARNING 2026-06-01 21:25:10,195 django.request asyncio_0 135371778156096 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14008 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 21:25:10,293 django.request django-main-thread 135371886368320 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 14008 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 21:25:10,307 django.request asyncio_1 135371751929408 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14008 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 21:25:10,311 django.request asyncio_0 135371778156096 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14008 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 21:25:10,371 django.request django-main-thread 135371886368320 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 14008 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 21:25:10,385 django.request asyncio_1 135371751929408 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14008 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 21:25:18,583 django.request django-main-thread 135371886368320 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 14008 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 21:25:18,597 django.request asyncio_0 135371778156096 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14008 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 21:25:21,058 django.request django-main-thread 135371886368320 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 14008 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 21:25:21,071 django.request asyncio_1 135371751929408 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14008 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 21:25:21,245 django.request asyncio_0 135371778156096 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14008 Unauthorized: /api/v1/billing/subscriptions
+WARNING 2026-06-01 21:25:21,245 django.request asyncio_1 135371751929408 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14008 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 21:25:21,335 django.request asyncio_0 135371778156096 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14008 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 21:25:21,363 django.request django-main-thread 135371886368320 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 14008 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 21:25:21,372 django.request asyncio_1 135371751929408 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14008 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 21:25:26,068 django.request django-main-thread 135371886368320 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 14008 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 21:25:26,073 django.request asyncio_0 135371778156096 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14008 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 21:25:32,034 django.request django-main-thread 135371886368320 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 14008 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 21:25:32,039 django.request asyncio_1 135371751929408 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14008 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 21:25:32,231 django.request asyncio_0 135371778156096 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14008 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 21:25:32,239 django.request asyncio_1 135371751929408 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14008 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 21:25:46,712 django.request asyncio_0 135371778156096 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14008 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 21:25:51,221 django.request django-main-thread 135371886368320 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 14008 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 21:25:51,234 django.request asyncio_1 135371751929408 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14008 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 21:26:45,023 django.request asyncio_0 134242350659136 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14492 Not Found: /media/avatars/2026/05/avatar.png
+WARNING 2026-06-01 21:26:47,132 django.request asyncio_0 134242350659136 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14492 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 21:26:47,273 django.request asyncio_0 134242350659136 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14492 Unauthorized: /api/v1/billing/subscriptions
+WARNING 2026-06-01 21:26:47,280 django.request asyncio_1 134242341217856 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14492 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 21:26:47,393 django.request asyncio_0 134242350659136 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14492 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 21:26:47,399 django.request django-main-thread 134242450273856 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 14492 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 21:26:47,424 django.request asyncio_1 134242341217856 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14492 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 21:27:02,672 django.request asyncio_1 134242341217856 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14492 Not Found: /media/avatars/2026/05/avatar.png
+WARNING 2026-06-01 21:27:05,253 django.request asyncio_0 134242350659136 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14492 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 21:27:05,409 django.request asyncio_1 134242341217856 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14492 Unauthorized: /api/v1/billing/subscriptions
+WARNING 2026-06-01 21:27:05,412 django.request asyncio_0 134242350659136 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14492 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 21:27:05,464 django.request asyncio_1 134242341217856 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14492 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 21:27:05,527 django.request django-main-thread 134242450273856 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 14492 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 21:27:05,543 django.request asyncio_0 134242350659136 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14492 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 21:27:15,381 django.request django-main-thread 134242450273856 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 14492 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 21:27:15,395 django.request asyncio_1 134242341217856 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14492 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 21:27:15,565 django.request asyncio_0 134242350659136 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14492 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 21:27:15,566 django.request asyncio_1 134242341217856 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14492 Unauthorized: /api/v1/billing/subscriptions
+WARNING 2026-06-01 21:27:15,572 django.request asyncio_0 134242350659136 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14492 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 21:27:15,631 django.request django-main-thread 134242450273856 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 14492 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 21:27:15,645 django.request asyncio_1 134242341217856 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14492 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 21:43:33,102 django.request django-main-thread 135614708258368 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 14725 "POST - AuthController[login] /api/v1/auth/login" ("AuthController.login() got multiple values for argument 'request'",)
+ERROR 2026-06-01 21:43:33,120 django.request asyncio_0 135614599001664 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 14725 Internal Server Error: /api/v1/auth/login
+WARNING 2026-06-01 21:54:51,309 django.request asyncio_0 135034944292416 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 32180 Not Found: /media/avatars/2026/05/avatar.png
+WARNING 2026-06-01 21:54:55,137 django.request django-main-thread 135034975753792 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 32180 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" ("HttpResponseBase.delete_cookie() got an unexpected keyword argument 'secure'",)
+ERROR 2026-06-01 21:54:55,198 django.request asyncio_0 135034944292416 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 32180 Internal Server Error: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 21:54:55,285 django.request asyncio_0 135034944292416 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 32180 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 21:54:55,310 django.request asyncio_0 135034944292416 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 32180 Unauthorized: /api/v1/billing/subscriptions
+WARNING 2026-06-01 21:54:55,327 django.request asyncio_0 135034944292416 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 32180 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 21:54:55,433 django.request django-main-thread 135034975753792 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 32180 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" ("HttpResponseBase.delete_cookie() got an unexpected keyword argument 'secure'",)
+ERROR 2026-06-01 21:54:55,437 django.request asyncio_0 135034944292416 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 32180 Internal Server Error: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 21:55:00,040 django.request django-main-thread 135034975753792 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 32180 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" ("HttpResponseBase.delete_cookie() got an unexpected keyword argument 'secure'",)
+ERROR 2026-06-01 21:55:00,051 django.request asyncio_0 135034944292416 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 32180 Internal Server Error: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 21:55:00,128 django.request asyncio_0 135034944292416 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 32180 Unauthorized: /api/v1/billing/subscriptions
+WARNING 2026-06-01 21:55:00,144 django.request asyncio_0 135034944292416 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 32180 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 21:55:00,215 django.request django-main-thread 135034975753792 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 32180 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" ("HttpResponseBase.delete_cookie() got an unexpected keyword argument 'secure'",)
+ERROR 2026-06-01 21:55:00,227 django.request asyncio_0 135034944292416 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 32180 Internal Server Error: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 21:55:00,603 django.request asyncio_0 135034944292416 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 32180 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 21:55:02,854 django.request django-main-thread 135034975753792 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 32180 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" ("HttpResponseBase.delete_cookie() got an unexpected keyword argument 'secure'",)
+ERROR 2026-06-01 21:55:02,882 django.request asyncio_0 135034944292416 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 32180 Internal Server Error: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 21:55:03,013 django.request asyncio_0 135034944292416 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 32180 Unauthorized: /api/v1/billing/subscriptions
+WARNING 2026-06-01 21:55:03,014 django.request asyncio_1 135034925409856 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 32180 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 21:55:03,110 django.request asyncio_0 135034944292416 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 32180 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 21:55:03,220 django.request django-main-thread 135034975753792 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 32180 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" ("HttpResponseBase.delete_cookie() got an unexpected keyword argument 'secure'",)
+ERROR 2026-06-01 21:55:03,227 django.request asyncio_1 135034925409856 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 32180 Internal Server Error: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 21:55:05,651 django.request django-main-thread 135034975753792 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 32180 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" ("HttpResponseBase.delete_cookie() got an unexpected keyword argument 'secure'",)
+ERROR 2026-06-01 21:55:05,657 django.request asyncio_0 135034944292416 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 32180 Internal Server Error: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 21:55:05,782 django.request asyncio_1 135034925409856 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 32180 Unauthorized: /api/v1/billing/subscriptions
+WARNING 2026-06-01 21:55:05,788 django.request asyncio_0 135034944292416 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 32180 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 21:55:05,851 django.request asyncio_1 135034925409856 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 32180 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 21:55:06,004 django.request django-main-thread 135034975753792 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 32180 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" ("HttpResponseBase.delete_cookie() got an unexpected keyword argument 'secure'",)
+ERROR 2026-06-01 21:55:06,016 django.request asyncio_0 135034944292416 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 32180 Internal Server Error: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 21:55:24,399 django.request django-main-thread 135034975753792 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 32180 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" ("HttpResponseBase.delete_cookie() got an unexpected keyword argument 'secure'",)
+ERROR 2026-06-01 21:55:24,406 django.request asyncio_1 135034925409856 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 32180 Internal Server Error: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 21:55:24,529 django.request asyncio_0 135034944292416 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 32180 Unauthorized: /api/v1/billing/subscriptions
+WARNING 2026-06-01 21:55:24,534 django.request asyncio_1 135034925409856 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 32180 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 21:55:24,552 django.request asyncio_0 135034944292416 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 32180 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 21:55:24,615 django.request django-main-thread 135034975753792 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 32180 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" ("HttpResponseBase.delete_cookie() got an unexpected keyword argument 'secure'",)
+WARNING 2026-06-01 21:55:28,527 django.request django-main-thread 135034975753792 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 32180 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" ("HttpResponseBase.delete_cookie() got an unexpected keyword argument 'secure'",)
+ERROR 2026-06-01 21:55:28,532 django.request asyncio_1 135034925409856 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 32180 Internal Server Error: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 21:55:28,650 django.request asyncio_0 135034944292416 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 32180 Unauthorized: /api/v1/billing/subscriptions
+WARNING 2026-06-01 21:55:28,662 django.request asyncio_1 135034925409856 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 32180 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 21:55:28,672 django.request asyncio_0 135034944292416 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 32180 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 21:55:28,790 django.request django-main-thread 135034975753792 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 32180 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" ("HttpResponseBase.delete_cookie() got an unexpected keyword argument 'secure'",)
+ERROR 2026-06-01 21:55:28,796 django.request asyncio_1 135034925409856 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 32180 Internal Server Error: /api/v1/auth/token/refresh-cookie
+ERROR 2026-06-01 22:04:17,442 django.request asyncio_0 137299097548352 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4317 Internal Server Error: /api/v1/auth/token/refresh-cookie
+Traceback (most recent call last):
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django_redis/cache.py", line 29, in _decorator
+    return method(self, *args, **kwargs)
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django_redis/cache.py", line 99, in _get
+    return self.client.get(key, default=default, version=version, client=client)
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django_redis/client/default.py", line 300, in get
+    raise ConnectionInterrupted(connection=client) from e
+django_redis.exceptions.ConnectionInterrupted: Redis ConnectionError: Error 111 connecting to localhost:6379. Connection refused.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/core/handlers/exception.py", line 42, in inner
+    response = await get_response(request)
+  File "/home/haradhansharma/projects/sattalbase/backend/common/cors_middleware.py", line 143, in middleware
+    allowed_origins = await _async_get_allowed_origins()
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/asgiref/sync.py", line 506, in __call__
+    ret = await asyncio.shield(exec_coro)
+  File "/usr/lib/python3.10/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/asgiref/sync.py", line 561, in thread_handler
+    return func(*args, **kwargs)
+  File "/home/haradhansharma/projects/sattalbase/backend/common/cors_middleware.py", line 61, in _get_allowed_origins
+    origins = cache.get(CACHE_KEY)
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django_redis/cache.py", line 92, in get
+    value = self._get(key, default, version, client)
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django_redis/cache.py", line 36, in _decorator
+    raise e.__cause__  # noqa: B904
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django_redis/client/default.py", line 298, in get
+    value = client.get(key)
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/redis/commands/core.py", line 2073, in get
+    return self.execute_command("GET", name, keys=[name])
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/redis/client.py", line 716, in execute_command
+    return self._execute_command(*args, **options)
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/redis/client.py", line 722, in _execute_command
+    conn = self.connection or pool.get_connection()
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/redis/utils.py", line 236, in wrapper
+    return func(*args, **kwargs)
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/redis/connection.py", line 3041, in get_connection
+    connection.connect()
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/redis/connection.py", line 976, in connect
+    self.retry.call_with_retry(
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/redis/retry.py", line 132, in call_with_retry
+    raise error
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/redis/retry.py", line 120, in call_with_retry
+    return do()
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/redis/connection.py", line 977, in <lambda>
+    lambda: self.connect_check_health(
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/redis/connection.py", line 1025, in connect_check_health
+    raise e
+redis.exceptions.ConnectionError: Error 111 connecting to localhost:6379. Connection refused.
+ERROR 2026-06-01 22:04:19,387 django.request asyncio_0 137299097548352 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4317 Internal Server Error: /api/v1/auth/login
+Traceback (most recent call last):
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django_redis/cache.py", line 29, in _decorator
+    return method(self, *args, **kwargs)
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django_redis/cache.py", line 99, in _get
+    return self.client.get(key, default=default, version=version, client=client)
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django_redis/client/default.py", line 300, in get
+    raise ConnectionInterrupted(connection=client) from e
+django_redis.exceptions.ConnectionInterrupted: Redis ConnectionError: Error 111 connecting to localhost:6379. Connection refused.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/asgiref/sync.py", line 557, in thread_handler
+    raise exc_info[1]
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/core/handlers/exception.py", line 42, in inner
+    response = await get_response(request)
+  File "/home/haradhansharma/projects/sattalbase/backend/common/cors_middleware.py", line 143, in middleware
+    allowed_origins = await _async_get_allowed_origins()
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/asgiref/sync.py", line 506, in __call__
+    ret = await asyncio.shield(exec_coro)
+  File "/usr/lib/python3.10/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/asgiref/sync.py", line 561, in thread_handler
+    return func(*args, **kwargs)
+  File "/home/haradhansharma/projects/sattalbase/backend/common/cors_middleware.py", line 61, in _get_allowed_origins
+    origins = cache.get(CACHE_KEY)
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django_redis/cache.py", line 92, in get
+    value = self._get(key, default, version, client)
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django_redis/cache.py", line 36, in _decorator
+    raise e.__cause__  # noqa: B904
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django_redis/client/default.py", line 298, in get
+    value = client.get(key)
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/redis/commands/core.py", line 2073, in get
+    return self.execute_command("GET", name, keys=[name])
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/redis/client.py", line 716, in execute_command
+    return self._execute_command(*args, **options)
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/redis/client.py", line 722, in _execute_command
+    conn = self.connection or pool.get_connection()
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/redis/utils.py", line 236, in wrapper
+    return func(*args, **kwargs)
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/redis/connection.py", line 3041, in get_connection
+    connection.connect()
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/redis/connection.py", line 976, in connect
+    self.retry.call_with_retry(
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/redis/retry.py", line 132, in call_with_retry
+    raise error
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/redis/retry.py", line 120, in call_with_retry
+    return do()
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/redis/connection.py", line 977, in <lambda>
+    lambda: self.connect_check_health(
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/redis/connection.py", line 1025, in connect_check_health
+    raise e
+redis.exceptions.ConnectionError: Error 111 connecting to localhost:6379. Connection refused.
+ERROR 2026-06-01 22:04:42,659 django.request asyncio_0 137299097548352 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4317 Internal Server Error: /api/v1/auth/token/refresh-cookie
+Traceback (most recent call last):
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django_redis/cache.py", line 29, in _decorator
+    return method(self, *args, **kwargs)
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django_redis/cache.py", line 99, in _get
+    return self.client.get(key, default=default, version=version, client=client)
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django_redis/client/default.py", line 300, in get
+    raise ConnectionInterrupted(connection=client) from e
+django_redis.exceptions.ConnectionInterrupted: Redis ConnectionError: Error 111 connecting to localhost:6379. Connection refused.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/asgiref/sync.py", line 557, in thread_handler
+    raise exc_info[1]
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/core/handlers/exception.py", line 42, in inner
+    response = await get_response(request)
+  File "/home/haradhansharma/projects/sattalbase/backend/common/cors_middleware.py", line 143, in middleware
+    allowed_origins = await _async_get_allowed_origins()
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/asgiref/sync.py", line 506, in __call__
+    ret = await asyncio.shield(exec_coro)
+  File "/usr/lib/python3.10/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/asgiref/sync.py", line 561, in thread_handler
+    return func(*args, **kwargs)
+  File "/home/haradhansharma/projects/sattalbase/backend/common/cors_middleware.py", line 61, in _get_allowed_origins
+    origins = cache.get(CACHE_KEY)
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django_redis/cache.py", line 92, in get
+    value = self._get(key, default, version, client)
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django_redis/cache.py", line 36, in _decorator
+    raise e.__cause__  # noqa: B904
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django_redis/client/default.py", line 298, in get
+    value = client.get(key)
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/redis/commands/core.py", line 2073, in get
+    return self.execute_command("GET", name, keys=[name])
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/redis/client.py", line 716, in execute_command
+    return self._execute_command(*args, **options)
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/redis/client.py", line 722, in _execute_command
+    conn = self.connection or pool.get_connection()
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/redis/utils.py", line 236, in wrapper
+    return func(*args, **kwargs)
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/redis/connection.py", line 3041, in get_connection
+    connection.connect()
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/redis/connection.py", line 976, in connect
+    self.retry.call_with_retry(
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/redis/retry.py", line 132, in call_with_retry
+    raise error
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/redis/retry.py", line 120, in call_with_retry
+    return do()
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/redis/connection.py", line 977, in <lambda>
+    lambda: self.connect_check_health(
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/redis/connection.py", line 1025, in connect_check_health
+    raise e
+redis.exceptions.ConnectionError: Error 111 connecting to localhost:6379. Connection refused.
+ERROR 2026-06-01 22:04:42,934 django.request asyncio_0 137299097548352 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4317 Internal Server Error: /api/v1/users/me
+Traceback (most recent call last):
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django_redis/cache.py", line 29, in _decorator
+    return method(self, *args, **kwargs)
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django_redis/cache.py", line 99, in _get
+    return self.client.get(key, default=default, version=version, client=client)
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django_redis/client/default.py", line 300, in get
+    raise ConnectionInterrupted(connection=client) from e
+django_redis.exceptions.ConnectionInterrupted: Redis ConnectionError: Error 111 connecting to localhost:6379. Connection refused.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/asgiref/sync.py", line 557, in thread_handler
+    raise exc_info[1]
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/core/handlers/exception.py", line 42, in inner
+    response = await get_response(request)
+  File "/home/haradhansharma/projects/sattalbase/backend/common/cors_middleware.py", line 143, in middleware
+    allowed_origins = await _async_get_allowed_origins()
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/asgiref/sync.py", line 506, in __call__
+    ret = await asyncio.shield(exec_coro)
+  File "/usr/lib/python3.10/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/asgiref/sync.py", line 561, in thread_handler
+    return func(*args, **kwargs)
+  File "/home/haradhansharma/projects/sattalbase/backend/common/cors_middleware.py", line 61, in _get_allowed_origins
+    origins = cache.get(CACHE_KEY)
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django_redis/cache.py", line 92, in get
+    value = self._get(key, default, version, client)
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django_redis/cache.py", line 36, in _decorator
+    raise e.__cause__  # noqa: B904
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django_redis/client/default.py", line 298, in get
+    value = client.get(key)
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/redis/commands/core.py", line 2073, in get
+    return self.execute_command("GET", name, keys=[name])
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/redis/client.py", line 716, in execute_command
+    return self._execute_command(*args, **options)
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/redis/client.py", line 722, in _execute_command
+    conn = self.connection or pool.get_connection()
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/redis/utils.py", line 236, in wrapper
+    return func(*args, **kwargs)
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/redis/connection.py", line 3041, in get_connection
+    connection.connect()
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/redis/connection.py", line 976, in connect
+    self.retry.call_with_retry(
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/redis/retry.py", line 132, in call_with_retry
+    raise error
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/redis/retry.py", line 120, in call_with_retry
+    return do()
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/redis/connection.py", line 977, in <lambda>
+    lambda: self.connect_check_health(
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/redis/connection.py", line 1025, in connect_check_health
+    raise e
+redis.exceptions.ConnectionError: Error 111 connecting to localhost:6379. Connection refused.
+ERROR 2026-06-01 22:04:43,169 django.request asyncio_0 137299097548352 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4317 Internal Server Error: /api/v1/billing/subscriptions
+Traceback (most recent call last):
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django_redis/cache.py", line 29, in _decorator
+    return method(self, *args, **kwargs)
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django_redis/cache.py", line 99, in _get
+    return self.client.get(key, default=default, version=version, client=client)
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django_redis/client/default.py", line 300, in get
+    raise ConnectionInterrupted(connection=client) from e
+django_redis.exceptions.ConnectionInterrupted: Redis ConnectionError: Error 111 connecting to localhost:6379. Connection refused.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/asgiref/sync.py", line 557, in thread_handler
+    raise exc_info[1]
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/core/handlers/exception.py", line 42, in inner
+    response = await get_response(request)
+  File "/home/haradhansharma/projects/sattalbase/backend/common/cors_middleware.py", line 143, in middleware
+    allowed_origins = await _async_get_allowed_origins()
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/asgiref/sync.py", line 506, in __call__
+    ret = await asyncio.shield(exec_coro)
+  File "/usr/lib/python3.10/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/asgiref/sync.py", line 561, in thread_handler
+    return func(*args, **kwargs)
+  File "/home/haradhansharma/projects/sattalbase/backend/common/cors_middleware.py", line 61, in _get_allowed_origins
+    origins = cache.get(CACHE_KEY)
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django_redis/cache.py", line 92, in get
+    value = self._get(key, default, version, client)
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django_redis/cache.py", line 36, in _decorator
+    raise e.__cause__  # noqa: B904
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django_redis/client/default.py", line 298, in get
+    value = client.get(key)
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/redis/commands/core.py", line 2073, in get
+    return self.execute_command("GET", name, keys=[name])
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/redis/client.py", line 716, in execute_command
+    return self._execute_command(*args, **options)
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/redis/client.py", line 722, in _execute_command
+    conn = self.connection or pool.get_connection()
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/redis/utils.py", line 236, in wrapper
+    return func(*args, **kwargs)
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/redis/connection.py", line 3041, in get_connection
+    connection.connect()
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/redis/connection.py", line 976, in connect
+    self.retry.call_with_retry(
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/redis/retry.py", line 132, in call_with_retry
+    raise error
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/redis/retry.py", line 120, in call_with_retry
+    return do()
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/redis/connection.py", line 977, in <lambda>
+    lambda: self.connect_check_health(
+  File "/home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/redis/connection.py", line 1025, in connect_check_health
+    raise e
+redis.exceptions.ConnectionError: Error 111 connecting to localhost:6379. Connection refused.
+WARNING 2026-06-01 22:06:53,289 django.request asyncio_0 137299097548352 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4317 Not Found: /media/avatars/2026/05/avatar.png
+WARNING 2026-06-01 22:07:17,970 django.request asyncio_0 137299097548352 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4317 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 22:07:18,096 django.request asyncio_0 137299097548352 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4317 Unauthorized: /api/v1/billing/subscriptions
+WARNING 2026-06-01 22:07:18,124 django.request asyncio_0 137299097548352 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4317 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 22:07:18,140 django.request asyncio_0 137299097548352 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4317 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 22:07:18,196 django.request django-main-thread 137299207648832 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 4317 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 22:07:18,200 django.request asyncio_0 137299097548352 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4317 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 22:07:25,182 django.request django-main-thread 137299207648832 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 4317 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 22:07:25,186 django.request asyncio_0 137299097548352 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4317 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 22:07:25,412 django.request asyncio_0 137299097548352 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4317 Unauthorized: /api/v1/billing/subscriptions
+WARNING 2026-06-01 22:07:25,421 django.request asyncio_1 137299070273088 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4317 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 22:07:25,452 django.request asyncio_0 137299097548352 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4317 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 22:07:25,511 django.request django-main-thread 137299207648832 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 4317 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 22:07:25,525 django.request asyncio_1 137299070273088 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4317 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 22:07:31,141 django.request django-main-thread 137299207648832 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 4317 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 22:07:31,147 django.request asyncio_0 137299097548352 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4317 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 22:07:31,228 django.request asyncio_0 137299097548352 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4317 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 22:07:31,262 django.request asyncio_1 137299070273088 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4317 Unauthorized: /api/v1/billing/subscriptions
+WARNING 2026-06-01 22:07:31,315 django.request django-main-thread 137299207648832 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 4317 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 22:07:31,319 django.request asyncio_0 137299097548352 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4317 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 22:07:31,504 django.request asyncio_1 137299070273088 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4317 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 22:07:36,142 django.request django-main-thread 137299207648832 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 4317 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 22:07:36,154 django.request asyncio_0 137299097548352 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4317 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 22:07:42,884 django.request django-main-thread 137299207648832 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 4317 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 22:07:42,889 django.request asyncio_1 137299070273088 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4317 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 22:07:43,291 django.request asyncio_0 137299097548352 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4317 Unauthorized: /api/v1/billing/subscriptions
+WARNING 2026-06-01 22:07:43,293 django.request asyncio_1 137299070273088 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4317 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 22:07:43,302 django.request asyncio_0 137299097548352 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4317 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 22:07:50,965 django.request django-main-thread 137299207648832 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 4317 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 22:07:50,980 django.request asyncio_1 137299070273088 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4317 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 22:07:51,083 django.request asyncio_0 137299097548352 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4317 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 22:07:51,155 django.request asyncio_1 137299070273088 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4317 Unauthorized: /api/v1/billing/subscriptions
+WARNING 2026-06-01 22:07:51,174 django.request django-main-thread 137299207648832 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 4317 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 22:07:51,191 django.request asyncio_0 137299097548352 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4317 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 22:07:51,191 django.request asyncio_1 137299070273088 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4317 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 22:07:55,799 django.request django-main-thread 137299207648832 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 4317 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 22:07:55,825 django.request asyncio_0 137299097548352 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4317 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 22:08:00,957 django.request django-main-thread 137299207648832 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 4317 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 22:08:00,962 django.request asyncio_1 137299070273088 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4317 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 22:08:01,118 django.request asyncio_0 137299097548352 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4317 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 22:08:01,119 django.request asyncio_1 137299070273088 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4317 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 22:08:05,162 django.request django-main-thread 137299207648832 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 4317 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 22:08:05,166 django.request asyncio_0 137299097548352 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4317 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 22:08:09,613 django.request django-main-thread 137299207648832 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 4317 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 22:08:09,622 django.request asyncio_1 137299070273088 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4317 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 22:09:15,461 django.request django-main-thread 137299207648832 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 4317 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 22:09:15,478 django.request asyncio_0 137299097548352 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4317 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 22:09:15,612 django.request asyncio_1 137299070273088 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4317 Unauthorized: /api/v1/billing/subscriptions
+WARNING 2026-06-01 22:09:15,661 django.request asyncio_0 137299097548352 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4317 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 22:09:15,693 django.request asyncio_1 137299070273088 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4317 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 22:09:15,772 django.request django-main-thread 137299207648832 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 4317 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 22:09:15,785 django.request asyncio_0 137299097548352 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4317 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 22:09:31,942 django.request asyncio_0 137299097548352 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4317 Not Found: /media/avatars/2026/05/avatar.png
+WARNING 2026-06-01 22:09:39,577 django.request asyncio_1 137299070273088 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4317 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 22:09:39,930 django.request asyncio_0 137299097548352 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4317 Unauthorized: /api/v1/billing/subscriptions
+WARNING 2026-06-01 22:09:39,933 django.request asyncio_1 137299070273088 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4317 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 22:09:39,987 django.request asyncio_0 137299097548352 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4317 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 22:09:40,025 django.request django-main-thread 137299207648832 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 4317 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 22:09:40,043 django.request asyncio_1 137299070273088 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4317 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 22:14:04,037 django.request django-main-thread 132823272384064 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 4607 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 22:14:04,051 django.request asyncio_0 132823231481408 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4607 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 22:14:19,813 django.request asyncio_0 132823231481408 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4607 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 22:14:19,916 django.request asyncio_0 132823231481408 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4607 Unauthorized: /api/v1/billing/subscriptions
+WARNING 2026-06-01 22:14:19,957 django.request asyncio_0 132823231481408 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4607 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 22:14:19,990 django.request asyncio_0 132823231481408 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4607 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 22:14:20,042 django.request django-main-thread 132823272384064 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 4607 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 22:14:20,049 django.request asyncio_0 132823231481408 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4607 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 22:30:00,962 django.request asyncio_0 138206813091392 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4704 Not Found: /media/avatars/2026/05/avatar.png
+WARNING 2026-06-01 22:30:07,442 django.request asyncio_0 138206813091392 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4704 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 22:30:07,532 django.request asyncio_0 138206813091392 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4704 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 22:30:07,587 django.request asyncio_0 138206813091392 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4704 Unauthorized: /api/v1/billing/subscriptions
+WARNING 2026-06-01 22:30:07,611 django.request asyncio_0 138206813091392 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4704 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 22:30:07,716 django.request django-main-thread 138206915323456 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 4704 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 22:30:07,729 django.request asyncio_0 138206813091392 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4704 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 22:31:25,059 django.request asyncio_0 128033172223552 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4753 Not Found: /media/avatars/2026/05/avatar.png
+WARNING 2026-06-01 22:31:27,559 django.request asyncio_0 128033172223552 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4753 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 22:31:27,713 django.request asyncio_0 128033172223552 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4753 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 22:31:27,724 django.request asyncio_0 128033172223552 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4753 Unauthorized: /api/v1/billing/subscriptions
+WARNING 2026-06-01 22:31:27,754 django.request asyncio_0 128033172223552 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4753 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 22:31:27,793 django.request django-main-thread 128033270994496 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 4753 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 22:31:27,806 django.request asyncio_0 128033172223552 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4753 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 22:31:44,900 django.request asyncio_0 128033172223552 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4753 Not Found: /media/avatars/2026/05/avatar.png
+WARNING 2026-06-01 22:32:01,528 django.request asyncio_0 128033172223552 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4753 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 22:32:01,700 django.request asyncio_0 128033172223552 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4753 Unauthorized: /api/v1/billing/subscriptions
+WARNING 2026-06-01 22:32:01,750 django.request asyncio_0 128033172223552 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4753 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 22:32:01,756 django.request asyncio_1 128033139267136 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4753 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 22:32:01,819 django.request django-main-thread 128033270994496 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 4753 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 22:32:01,844 django.request asyncio_0 128033172223552 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4753 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 22:55:47,046 django.request asyncio_0 128033172223552 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4753 Not Found: /media/avatars/2026/05/avatar.png
+WARNING 2026-06-01 22:56:17,418 django.request asyncio_1 128033139267136 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4753 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 22:56:17,575 django.request asyncio_0 128033172223552 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4753 Unauthorized: /api/v1/billing/subscriptions
+WARNING 2026-06-01 22:56:17,591 django.request asyncio_1 128033139267136 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4753 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 22:56:17,628 django.request asyncio_0 128033172223552 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4753 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 22:56:17,673 django.request django-main-thread 128033270994496 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 4753 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 22:56:17,678 django.request asyncio_1 128033139267136 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 4753 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 22:57:17,081 django.request django-main-thread 133601803892288 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 11968 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 22:57:17,110 django.request asyncio_0 133601764038208 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 11968 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 22:57:17,261 django.request asyncio_0 133601764038208 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 11968 Unauthorized: /api/v1/billing/subscriptions
+WARNING 2026-06-01 22:57:28,418 django.request asyncio_0 133601764038208 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 11968 Not Found: /media/avatars/2026/05/avatar.png
+WARNING 2026-06-01 22:58:55,425 django.request asyncio_0 134622101890624 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12072 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 22:58:55,662 django.request asyncio_0 134622101890624 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12072 Unauthorized: /api/v1/billing/subscriptions
+WARNING 2026-06-01 22:58:55,682 django.request asyncio_0 134622101890624 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12072 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 22:58:55,805 django.request asyncio_0 134622101890624 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12072 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 22:58:55,809 django.request django-main-thread 134622210102848 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 12072 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 22:58:55,835 django.request asyncio_0 134622101890624 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12072 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 22:59:09,138 django.request asyncio_0 134622101890624 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12072 Not Found: /media/avatars/2026/05/avatar.png
+WARNING 2026-06-01 23:10:36,223 django.request asyncio_0 134622101890624 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12072 Not Found: /media/avatars/2026/05/avatar.png
+WARNING 2026-06-01 23:11:55,699 django.request asyncio_0 125223908873792 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12210 Not Found: /media/avatars/2026/05/avatar.png
+WARNING 2026-06-01 23:12:03,631 django.request django-main-thread 125223940335168 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 12210 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 23:12:03,641 django.request asyncio_0 125223908873792 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12210 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 23:12:14,570 django.request django-main-thread 125223940335168 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 12210 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 23:12:14,579 django.request asyncio_0 125223908873792 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12210 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 23:12:37,649 django.request django-main-thread 125223940335168 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 12210 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 23:12:37,662 django.request asyncio_0 125223908873792 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12210 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 23:13:16,442 django.request django-main-thread 128807890581056 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 12312 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 23:13:16,447 django.request asyncio_0 128807782573632 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12312 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 23:13:52,818 django.request django-main-thread 128807890581056 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 12312 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 23:13:52,822 django.request asyncio_0 128807782573632 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12312 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 23:13:57,561 django.request django-main-thread 128807890581056 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 12312 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 23:13:57,574 django.request asyncio_0 128807782573632 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12312 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 23:15:38,945 django.request django-main-thread 139346746275392 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 12375 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 23:15:38,956 django.request asyncio_0 139346639316544 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12375 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 23:16:10,477 django.request django-main-thread 139346746275392 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 12375 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 23:16:10,490 django.request asyncio_0 139346639316544 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12375 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 23:16:31,057 django.request django-main-thread 139346746275392 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 12375 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 23:16:31,062 django.request asyncio_0 139346639316544 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12375 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 23:16:31,304 django.request django-main-thread 139346746275392 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 12375 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 23:16:31,310 django.request asyncio_0 139346639316544 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12375 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 23:16:37,402 django.request django-main-thread 139346746275392 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 12375 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 23:16:37,407 django.request asyncio_0 139346639316544 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12375 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 23:16:44,331 django.request django-main-thread 139346746275392 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 12375 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 23:16:44,342 django.request asyncio_0 139346639316544 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12375 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 23:17:07,222 django.request django-main-thread 139346746275392 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 12375 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 23:17:07,227 django.request asyncio_0 139346639316544 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12375 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 23:17:14,716 django.request django-main-thread 139346746275392 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 12375 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 23:17:14,743 django.request asyncio_0 139346639316544 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12375 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 23:17:15,181 django.request django-main-thread 139346746275392 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 12375 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 23:17:15,192 django.request asyncio_0 139346639316544 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12375 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 23:17:46,660 django.request django-main-thread 139346746275392 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 12375 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 23:17:46,671 django.request asyncio_0 139346639316544 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12375 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 23:23:35,680 django.request django-main-thread 139346746275392 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 12375 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 23:23:35,697 django.request asyncio_0 139346639316544 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12375 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 23:23:52,926 django.request django-main-thread 139346746275392 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 12375 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 23:23:52,930 django.request asyncio_0 139346639316544 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12375 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 23:35:47,424 django.request asyncio_0 139346639316544 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12375 Not Found: /media/avatars/2026/05/avatar.png
+WARNING 2026-06-01 23:35:51,815 django.request asyncio_0 139346639316544 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12375 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 23:35:52,013 django.request asyncio_0 139346639316544 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12375 Unauthorized: /api/v1/billing/subscriptions
+WARNING 2026-06-01 23:35:52,045 django.request asyncio_0 139346639316544 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12375 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 23:35:52,078 django.request asyncio_0 139346639316544 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12375 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 23:35:59,949 django.request django-main-thread 139346746275392 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 12375 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 23:35:59,979 django.request asyncio_0 139346639316544 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12375 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 23:36:00,101 django.request asyncio_0 139346639316544 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12375 Unauthorized: /api/v1/billing/subscriptions
+WARNING 2026-06-01 23:36:00,107 django.request asyncio_1 139346647709248 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12375 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 23:36:00,111 django.request asyncio_0 139346639316544 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12375 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 23:36:03,864 django.request django-main-thread 139346746275392 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 12375 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 23:36:03,872 django.request asyncio_2 139346254493248 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12375 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 23:36:03,987 django.request asyncio_0 139346639316544 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12375 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 23:36:03,994 django.request asyncio_1 139346647709248 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12375 Unauthorized: /api/v1/billing/subscriptions
+WARNING 2026-06-01 23:36:04,025 django.request asyncio_2 139346254493248 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12375 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 23:36:16,445 django.request django-main-thread 139346746275392 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 12375 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 23:36:16,457 django.request asyncio_1 139346647709248 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12375 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 23:36:16,605 django.request asyncio_2 139346254493248 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12375 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 23:36:16,605 django.request asyncio_0 139346639316544 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12375 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 23:36:16,656 django.request asyncio_1 139346647709248 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12375 Unauthorized: /api/v1/billing/subscriptions
+WARNING 2026-06-01 23:36:16,894 django.request asyncio_1 139346647709248 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12375 Not Found: /media/avatars/2026/05/avatar.png
+WARNING 2026-06-01 23:36:20,742 django.request django-main-thread 139346746275392 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 12375 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 23:36:20,753 django.request asyncio_0 139346639316544 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12375 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 23:36:21,239 django.request asyncio_1 139346647709248 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12375 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 23:36:21,240 django.request asyncio_2 139346254493248 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12375 Unauthorized: /api/v1/billing/subscriptions
+WARNING 2026-06-01 23:36:21,308 django.request asyncio_0 139346639316544 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12375 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 23:36:52,523 django.request asyncio_0 139346639316544 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12375 Not Found: /media/avatars/2026/05/avatar.png
+WARNING 2026-06-01 23:40:04,588 django.request asyncio_2 139346254493248 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12375 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 23:40:09,917 django.request django-main-thread 139346746275392 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 12375 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 23:40:09,921 django.request asyncio_0 139346639316544 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12375 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 23:40:10,430 django.request asyncio_2 139346254493248 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12375 Unauthorized: /api/v1/billing/subscriptions
+WARNING 2026-06-01 23:40:10,431 django.request asyncio_1 139346647709248 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12375 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 23:40:10,432 django.request asyncio_0 139346639316544 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12375 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 23:40:33,735 django.request asyncio_0 139346639316544 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12375 Not Found: /media/avatars/2026/05/avatar.png
+WARNING 2026-06-01 23:40:35,943 django.request asyncio_2 139346254493248 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12375 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 23:40:36,119 django.request asyncio_0 139346639316544 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12375 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 23:40:36,120 django.request asyncio_1 139346647709248 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12375 Unauthorized: /api/v1/billing/subscriptions
+WARNING 2026-06-01 23:40:36,163 django.request asyncio_2 139346254493248 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12375 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 23:48:19,014 django.request django-main-thread 139346746275392 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 12375 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-01 23:48:19,019 django.request asyncio_1 139346647709248 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12375 Unauthorized: /api/v1/auth/token/refresh-cookie
+WARNING 2026-06-01 23:48:19,107 django.request asyncio_2 139346254493248 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12375 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 23:48:19,125 django.request asyncio_1 139346647709248 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12375 Unauthorized: /api/v1/billing/subscriptions
+WARNING 2026-06-01 23:48:19,159 django.request asyncio_2 139346254493248 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12375 Unauthorized: /api/v1/users/me
+WARNING 2026-06-01 23:49:59,799 django.request asyncio_0 125775491622464 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12723 Not Found: /media/avatars/2026/05/avatar.png
+WARNING 2026-06-01 23:53:08,725 django.request asyncio_0 125775491622464 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12723 Not Found: /media/avatars/2026/05/avatar.png
+WARNING 2026-06-01 23:53:37,305 django.request asyncio_0 125775491622464 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12723 Not Found: /media/avatars/2026/05/avatar.png
+WARNING 2026-06-02 00:01:21,854 django.request django-main-thread 125775616927296 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 12723 "POST - UserController[request_email_change] /api/v1/users/me/change-email" 400
+WARNING 2026-06-02 00:01:21,857 django.request asyncio_0 125775491622464 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 12723 Bad Request: /api/v1/users/me/change-email
+WARNING 2026-06-02 01:39:30,285 django.request django-main-thread 132393490126400 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 13959 "POST - AuthController[login] /api/v1/auth/login" 429
+WARNING 2026-06-02 01:39:30,299 django.request asyncio_0 132393214133824 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 13959 Too Many Requests: /api/v1/auth/login
+WARNING 2026-06-02 01:39:39,720 django.request django-main-thread 132393490126400 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 13959 "POST - AuthController[login] /api/v1/auth/login" 429
+WARNING 2026-06-02 01:39:39,733 django.request asyncio_0 132393214133824 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 13959 Too Many Requests: /api/v1/auth/login
+WARNING 2026-06-02 01:42:54,623 django.request django-main-thread 132393490126400 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 13959 "POST - AuthController[login] /api/v1/auth/login" 429
+WARNING 2026-06-02 01:42:54,636 django.request asyncio_0 132393214133824 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 13959 Too Many Requests: /api/v1/auth/login
+WARNING 2026-06-02 01:43:02,686 django.request django-main-thread 132393490126400 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 13959 "POST - AuthController[login] /api/v1/auth/login" 429
+WARNING 2026-06-02 01:43:02,697 django.request asyncio_0 132393214133824 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 13959 Too Many Requests: /api/v1/auth/login
+WARNING 2026-06-02 01:43:35,404 django.request django-main-thread 132393490126400 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 13959 "POST - AuthController[login] /api/v1/auth/login" 429
+WARNING 2026-06-02 01:43:35,409 django.request asyncio_0 132393214133824 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 13959 Too Many Requests: /api/v1/auth/login
+WARNING 2026-06-02 01:43:39,189 django.request django-main-thread 132393490126400 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 13959 "POST - AuthController[login] /api/v1/auth/login" 429
+WARNING 2026-06-02 01:43:39,202 django.request asyncio_0 132393214133824 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 13959 Too Many Requests: /api/v1/auth/login
+WARNING 2026-06-02 01:44:49,512 django.request django-main-thread 132393490126400 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 13959 "POST - AuthController[login] /api/v1/auth/login" 429
+WARNING 2026-06-02 01:44:49,517 django.request asyncio_0 132393214133824 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 13959 Too Many Requests: /api/v1/auth/login
+WARNING 2026-06-02 14:52:39,087 django.request django-main-thread 133374600541760 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/ninja_extra/operation.py 136 _log_action 9848 "POST - AuthController[refresh_token_cookie] /api/v1/auth/token/refresh-cookie" 401
+WARNING 2026-06-02 14:52:39,193 django.request asyncio_0 133374457919040 /home/haradhansharma/projects/sattalbase/venv/lib/python3.10/site-packages/django/utils/log.py 253 log_response 9848 Unauthorized: /api/v1/auth/token/refresh-cookie

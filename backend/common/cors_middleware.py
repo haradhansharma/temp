@@ -30,7 +30,7 @@ Note:
 
 import logging
 
-from asgiref.sync import iscoroutinefunction
+from asgiref.sync import iscoroutinefunction, sync_to_async
 from django.conf import settings
 from django.utils.decorators import sync_and_async_middleware
 
@@ -129,6 +129,9 @@ def service_domain_cors_middleware(get_response):
 
     if iscoroutinefunction(get_response):
         # ASGI path (Daphne / uvicorn)
+        # Wrap the sync DB query function for async safety
+        _async_get_allowed_origins = sync_to_async(_get_allowed_origins, thread_sensitive=True)
+
         async def middleware(request):
             origin = request.META.get("HTTP_ORIGIN", "").strip()
             
@@ -136,8 +139,8 @@ def service_domain_cors_middleware(get_response):
             # This is needed because CORS_ALLOW_ALL_ORIGINS=True sends "*" as origin
             # which is incompatible with credentials (cookies)
             if origin:
-                # Check if origin is allowed
-                allowed_origins = _get_allowed_origins()
+                # Check if origin is allowed (async-safe DB query)
+                allowed_origins = await _async_get_allowed_origins()
                 
                 # In DEBUG mode with CORS_ALLOW_ALL_ORIGINS=True, allow any localhost origin
                 # This is safe for development and enables cookie-based auth to work

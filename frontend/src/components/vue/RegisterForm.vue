@@ -114,8 +114,15 @@ async function handleSubmit() {
 
     showToast("Account created successfully! Please verify your email.", "success");
     // Redirect to email verification page with the registered email
-    setTimeout(() => {
-      window.location.href = `/auth/verify-email?email=${encodeURIComponent(form.email.trim())}`;
+    // VUE 3 CONVENTION: Use Astro's navigate() for SPA-like redirect
+    setTimeout(async () => {
+      try {
+        const { navigate } = await import("astro:transitions/client");
+        navigate(`/auth/verify-email?email=${encodeURIComponent(form.email.trim())}`);
+      } catch {
+        // Fallback: full page reload if navigate() unavailable
+        window.location.href = `/auth/verify-email?email=${encodeURIComponent(form.email.trim())}`;
+      }
     }, 1500);
   } catch (err: unknown) {
     const apiErr = err as ApiError;
